@@ -47,6 +47,7 @@ import 'package:saber/data/tools/pen.dart';
 import 'package:saber/data/tools/pencil.dart';
 import 'package:saber/data/tools/select.dart';
 import 'package:saber/data/tools/shape_pen.dart';
+import 'package:saber/data/yc_note/account.dart';
 import 'package:saber/i18n/strings.g.dart';
 import 'package:saber/pages/home/whiteboard.dart';
 import 'package:sbn/change.dart';
@@ -182,6 +183,7 @@ class EditorState extends State<Editor> {
 
   @override
   void initState() {
+    ycAccount.addListener(_setState);
     DynamicMaterialApp.addFullscreenListener(_setState);
 
     _initAsync();
@@ -992,11 +994,13 @@ class EditorState extends State<Editor> {
   late final filenameTextEditingController = TextEditingController();
   Timer? _renameTimer;
   void renameFile([String? _]) {
+    if (coreInfo.readOnly) return;
     _renameTimer?.cancel();
     _renameTimer = Timer(const Duration(seconds: 5), _renameFileNow);
   }
 
   Future<void> _renameFileNow() async {
+    if (coreInfo.readOnly) return;
     final newName = filenameTextEditingController.text.trim();
     if (newName == coreInfo.fileName) return;
 
@@ -1403,7 +1407,7 @@ class EditorState extends State<Editor> {
     );
 
     final readonlyBanner = ReadOnlyBanner(
-      coreInfo.readOnlyReason,
+      ycAccount.isReadOnly ? .permissionDenied : coreInfo.readOnlyReason,
       action: coreInfo.readOnlyReason == .versionTooNew
           ? showVersionTooNewDialog
           : null,
@@ -1651,6 +1655,7 @@ class EditorState extends State<Editor> {
                         key: _filenameFormKey,
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                         child: TextFormField(
+                          readOnly: coreInfo.readOnly,
                           decoration: const InputDecoration(
                             border: InputBorder.none,
                           ),
@@ -2060,6 +2065,7 @@ class EditorState extends State<Editor> {
 
   @override
   void dispose() {
+    ycAccount.removeListener(_setState);
     unawaited(_cleanUpAsync());
 
     DynamicMaterialApp.removeFullscreenListener(_setState);

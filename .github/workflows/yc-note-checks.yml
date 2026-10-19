@@ -1,0 +1,40 @@
+name: YC Note checks
+
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - run: sudo apt-get update -q && sudo apt-get install -y php-cli php-sqlite3 php-mbstring
+      - run: php server/tests/integration.php
+      - run: python3 server/tests/http_test.py
+
+  app:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/shared_workflows/install_apt_dependencies
+      - name: Install Flutter and Rust
+        run: |
+          git clone --depth 1 --branch 3.47.7 https://github.com/flutter/flutter.git "$RUNNER_TEMP/yc-note-flutter"
+          echo "$RUNNER_TEMP/yc-note-flutter/bin" >> "$GITHUB_PATH"
+          rustup toolchain install 1.97.1 --profile minimal
+          rustup override set 1.97.1
+      - run: flutter pub get
+      - run: dart analyze lib packages/sbn
+      - run: flutter test --no-pub test/yc_note test/fm_test.dart test/fm_write_stream_test.dart test/cleanup_assets_test.dart

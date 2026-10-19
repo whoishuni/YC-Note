@@ -69,7 +69,7 @@ class _Translations$home$id extends Translations$home$en {
 	@override late final _Translations$home$titles$id titles = _Translations$home$titles$id._(_root);
 	@override late final _Translations$home$tooltips$id tooltips = _Translations$home$tooltips$id._(_root);
 	@override late final _Translations$home$create$id create = _Translations$home$create$id._(_root);
-	@override String get welcome => 'Selamat datang di Saber';
+	@override String get welcome => 'Selamat datang di YC Note';
 	@override String get invalidFormat => 'File yang kamu pilih tidak didukung. Pilih file sbn, sbn2, sba, atau pdf.';
 	@override String get noFiles => 'Tidak ada file';
 	@override String get noPreviewAvailable => 'Pratinjau tidak tersedia';
@@ -118,7 +118,7 @@ class _Translations$settings$id extends Translations$settings$en {
 	];
 	@override late final _Translations$settings$reset$id reset = _Translations$settings$reset$id._(_root);
 	@override String get resyncEverything => 'Sinkronkan ulang semuanya';
-	@override String get openDataDir => 'Buka folder Saber';
+	@override String get openDataDir => 'Buka folder YC Note';
 	@override late final _Translations$settings$customDataDir$id customDataDir = _Translations$settings$customDataDir$id._(_root);
 	@override String get autosaveDisabled => 'Tidak pernah';
 	@override String get shapeRecognitionDisabled => 'Tidak pernah';
@@ -407,7 +407,7 @@ class _Translations$sentry$consent$id extends Translations$sentry$consent$en {
 	final TranslationsId _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Bantu tingkatkan Saber?';
+	@override String get title => 'Bantu tingkatkan YC Note?';
 	@override late final _Translations$sentry$consent$description$id description = _Translations$sentry$consent$description$id._(_root);
 	@override late final _Translations$sentry$consent$answers$id answers = _Translations$sentry$consent$answers$id._(_root);
 }
@@ -439,7 +439,7 @@ class _Translations$settings$prefLabels$id extends Translations$settings$prefLab
 	@override String get layoutSize => 'Jenis tata letak';
 	@override String get customAccentColor => 'Warna aksen kustom';
 	@override String get hyperlegibleFont => 'Font Atkinson Hyperlegible';
-	@override String get shouldCheckForUpdates => 'Periksa pembaruan Saber';
+	@override String get shouldCheckForUpdates => 'Periksa pembaruan YC Note';
 	@override String get shouldAlwaysAlertForUpdates => 'Pembaruan lebih cepat';
 	@override String get allowInsecureConnections => 'Izinkan koneksi tidak aman';
 	@override String get editorToolbarAlignment => 'Posisi toolbar';
@@ -458,7 +458,7 @@ class _Translations$settings$prefLabels$id extends Translations$settings$prefLab
 	@override String get autosave => 'Simpan otomatis';
 	@override String get shapeRecognitionDelay => 'Jeda pengenalan bentuk';
 	@override String get autoStraightenLines => 'Luruskan garis otomatis';
-	@override String get customDataDir => 'Folder Saber kustom';
+	@override String get customDataDir => 'Folder YC Note kustom';
 	@override String get sentry => 'Pelaporan error';
 }
 
@@ -470,7 +470,7 @@ class _Translations$settings$prefDescriptions$id extends Translations$settings$p
 
 	// Translations
 	@override String get hyperlegibleFont => 'Meningkatkan keterbacaan bagi pengguna dengan penglihatan rendah';
-	@override String get allowInsecureConnections => '(Tidak disarankan) Izinkan Saber terhubung ke server dengan sertifikat yang ditandatangani sendiri/tidak tepercaya';
+	@override String get allowInsecureConnections => '(Tidak disarankan) Izinkan YC Note terhubung ke server dengan sertifikat yang ditandatangani sendiri/tidak tepercaya';
 	@override String get preferGreyscale => 'Untuk layar e-ink';
 	@override String get autoClearWhiteboardOnExit => 'Mengosongkan papan tulis setelah kamu keluar dari aplikasi';
 	@override String get disableEraserAfterUse => 'Otomatis kembali ke pena setelah memakai penghapus';
@@ -581,10 +581,10 @@ class _Translations$login$ncLoginStep$id extends Translations$login$ncLoginStep$
 
 	// Translations
 	@override String get whereToStoreData => 'Pilih tempat menyimpan datamu:';
-	@override String get saberNcServer => 'Server Nextcloud milik Saber';
+	@override String get saberNcServer => 'Server Nextcloud milik YC Note';
 	@override String get otherNcServer => 'Server Nextcloud lain';
 	@override String get serverUrl => 'URL server';
-	@override String get loginWithSaber => 'Masuk dengan Saber';
+	@override String get loginWithSaber => 'Masuk dengan YC Note';
 	@override String get loginWithNextcloud => 'Masuk dengan Nextcloud';
 	@override late final _Translations$login$ncLoginStep$loginFlow$id loginFlow = _Translations$login$ncLoginStep$loginFlow$id._(_root);
 }
@@ -597,7 +597,7 @@ class _Translations$login$encLoginStep$id extends Translations$login$encLoginSte
 
 	// Translations
 	@override String get enterEncPassword => 'Untuk melindungi datamu, masukkan kata sandi enkripsi:';
-	@override String get newToSaber => 'Baru di Saber? Cukup masukkan kata sandi enkripsi baru.';
+	@override String get newToSaber => 'Baru di YC Note? Cukup masukkan kata sandi enkripsi baru.';
 	@override String get encPassword => 'Kata sandi enkripsi';
 	@override String get encFaqTitle => 'Pertanyaan yang sering diajukan';
 	@override String get wrongEncPassword => 'Dekripsi gagal dengan kata sandi tersebut. Coba masukkan lagi.';
@@ -639,7 +639,7 @@ class _Translations$profile$faq$1$id extends Translations$profile$faq$1$en {
 
 	// Translations
 	@override String get q => 'Bagaimana cara mengganti kata sandi Nextcloud?';
-	@override String get a => 'Buka situs web server dan masuk. Lalu buka Pengaturan > Keamanan > Ubah kata sandi. Setelah mengganti kata sandi, kamu perlu keluar lalu masuk kembali ke Saber.';
+	@override String get a => 'Buka situs web server dan masuk. Lalu buka Pengaturan > Keamanan > Ubah kata sandi. Setelah mengganti kata sandi, kamu perlu keluar lalu masuk kembali ke YC Note.';
 }
 
 // Path: profile.faq.2
@@ -650,7 +650,7 @@ class _Translations$profile$faq$2$id extends Translations$profile$faq$2$en {
 
 	// Translations
 	@override String get q => 'Bagaimana cara mengganti kata sandi enkripsi?';
-	@override String get a => '0. Pastikan sinkronisasi sudah selesai (lihat progres sinkronisasi di layar beranda).\n1. Keluar dari Saber.\n2. Buka situs web server dan hapus folder \'Saber\'. Ini akan menghapus semua catatanmu dari server.\n3. Masuk lagi ke Saber. Kamu bisa memilih kata sandi enkripsi baru saat masuk.\n4. Jangan lupa keluar dan masuk lagi ke Saber di perangkat lainmu juga.';
+	@override String get a => '0. Pastikan sinkronisasi sudah selesai (lihat progres sinkronisasi di layar beranda).\n1. Keluar dari YC Note.\n2. Buka situs web server dan hapus folder \'YC Note\'. Ini akan menghapus semua catatanmu dari server.\n3. Masuk lagi ke YC Note. Kamu bisa memilih kata sandi enkripsi baru saat masuk.\n4. Jangan lupa keluar dan masuk lagi ke YC Note di perangkat lainmu juga.';
 }
 
 // Path: profile.faq.3
@@ -661,7 +661,7 @@ class _Translations$profile$faq$3$id extends Translations$profile$faq$3$en {
 
 	// Translations
 	@override String get q => 'Bagaimana cara menghapus akun saya?';
-	@override String get a => 'Ketuk tombol "${_root.profile.quickLinks.deleteAccount}" di atas, lalu masuk jika diminta.\nJika kamu memakai server resmi Saber, akunmu akan dihapus setelah masa tenggang 1 minggu. Selama masa ini, kamu bisa menghubungi saya di adilhanney@disroot.org untuk membatalkan penghapusan.\nJika kamu memakai server pihak ketiga, mungkin tidak ada opsi untuk menghapus akun: kamu perlu membaca kebijakan privasi server tersebut untuk informasi lebih lanjut.';
+	@override String get a => 'Ketuk tombol "${_root.profile.quickLinks.deleteAccount}" di atas, lalu masuk jika diminta.\nJika kamu memakai server resmi YC Note, akunmu akan dihapus setelah masa tenggang 1 minggu. Selama masa ini, kamu bisa menghubungi saya di adilhanney@disroot.org untuk membatalkan penghapusan.\nJika kamu memakai server pihak ketiga, mungkin tidak ada opsi untuk menghapus akun: kamu perlu membaca kebijakan privasi server tersebut untuk informasi lebih lanjut.';
 }
 
 // Path: editor.toolbar
@@ -814,7 +814,7 @@ class _Translations$editor$versionTooNew$id extends Translations$editor$versionT
 	final TranslationsId _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Catatan ini diedit menggunakan Saber versi yang lebih baru';
+	@override String get title => 'Catatan ini diedit menggunakan YC Note versi yang lebih baru';
 	@override String get subtitle => 'Mengedit catatan ini dapat menyebabkan sebagian informasi hilang. Abaikan peringatan ini dan tetap edit?';
 	@override String get allowEditing => 'Izinkan pengeditan';
 }
@@ -906,7 +906,7 @@ class _Translations$login$ncLoginStep$loginFlow$id extends Translations$login$nc
 	final TranslationsId _root; // ignore: unused_field
 
 	// Translations
-	@override String get pleaseAuthorize => 'Izinkan Saber mengakses akun Nextcloud-mu';
+	@override String get pleaseAuthorize => 'Izinkan YC Note mengakses akun Nextcloud-mu';
 	@override String get followPrompts => 'Ikuti petunjuk yang muncul di antarmuka Nextcloud';
 	@override String get browserDidntOpen => 'Halaman masuk tidak terbuka? Klik di sini';
 }
@@ -930,7 +930,7 @@ class _Translations$login$encLoginStep$encFaq$1$id extends Translations$login$en
 
 	// Translations
 	@override String get q => 'Saya belum mengatur kata sandi enkripsi. Dari mana saya mendapatkannya?';
-	@override String get a => 'Pilih kata sandi enkripsi baru, lalu masukkan di atas.\nSaber akan membuat kunci enkripsimu secara otomatis dari kata sandi tersebut.';
+	@override String get a => 'Pilih kata sandi enkripsi baru, lalu masukkan di atas.\nYC Note akan membuat kunci enkripsimu secara otomatis dari kata sandi tersebut.';
 }
 
 // Path: login.encLoginStep.encFaq.2

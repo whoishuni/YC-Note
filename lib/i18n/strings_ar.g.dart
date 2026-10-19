@@ -118,7 +118,7 @@ class _Translations$settings$ar extends Translations$settings$en {
 	];
 	@override late final _Translations$settings$reset$ar reset = _Translations$settings$reset$ar._(_root);
 	@override String get resyncEverything => 'إعادة مزامنة كل شيء';
-	@override String get openDataDir => 'Saber فتح مجلد';
+	@override String get openDataDir => 'YC Note فتح مجلد';
 	@override late final _Translations$settings$customDataDir$ar customDataDir = _Translations$settings$customDataDir$ar._(_root);
 	@override String get autosaveDisabled => 'أبداً';
 	@override String get shapeRecognitionDisabled => 'أبداً';
@@ -191,7 +191,7 @@ class _Translations$appInfo$ar extends Translations$appInfo$en {
 	final TranslationsAr _root; // ignore: unused_field
 
 	// Translations
-	@override String licenseNotice({required Object buildYear}) => 'Saber حقوق نشر © 2022-${buildYear}  Adil Hanney\nهذا البرنامج لا يأتي مع أي ضمان على الإطلاق. هذا برنامج مجاني، ونرحب بإعادة توزيعه في ظل ظروف معينة.';
+	@override String licenseNotice({required Object buildYear}) => 'YC Note حقوق نشر © 2022-${buildYear}  Adil Hanney\nهذا البرنامج لا يأتي مع أي ضمان على الإطلاق. هذا برنامج مجاني، ونرحب بإعادة توزيعه في ظل ظروف معينة.';
 	@override String get debug => 'تصحيح أخطاء';
 	@override String get sponsorButton => 'انقر هنا لتدعمني أو شراء المزيد من مساحة التخزين';
 	@override String get licenseButton => 'انقر هنا لعرض المزيد من معلومات الترخيص';
@@ -470,7 +470,7 @@ class _Translations$settings$prefDescriptions$ar extends Translations$settings$p
 
 	// Translations
 	@override String get hyperlegibleFont => 'يزيد Atkinson Hyperlegible من وضوح الرؤية للقراء الذين يعانون من ضعف في الرؤية';
-	@override String get allowInsecureConnections => '(غير موصى به) بالاتصال بالخوادم بشهادات غير موثوقة/موقعة ذاتيًا Saber السماح لـ';
+	@override String get allowInsecureConnections => '(غير موصى به) بالاتصال بالخوادم بشهادات غير موثوقة/موقعة ذاتيًا YC Note السماح لـ';
 	@override String get preferGreyscale => 'لشاشات الحبر الإلكتروني';
 	@override String get autoClearWhiteboardOnExit => 'ستظل متزامنة مع أجهزتك الأخرى';
 	@override String get disableEraserAfterUse => 'التبديل تلقائيًا إلى القلم بعد استخدام الممحاة';
@@ -581,10 +581,10 @@ class _Translations$login$ncLoginStep$ar extends Translations$login$ncLoginStep$
 
 	// Translations
 	@override String get whereToStoreData => 'اختر المكان الذي تريد تخزين بياناتك فيه:';
-	@override String get saberNcServer => 'Nextcloud الى Saber خادم';
+	@override String get saberNcServer => 'Nextcloud الى YC Note خادم';
 	@override String get otherNcServer => 'اخر Nextcloud خادم';
 	@override String get serverUrl => 'عنوان الخادم';
-	@override String get loginWithSaber => 'Saber تسجيل الدخول باستخدام';
+	@override String get loginWithSaber => 'YC Note تسجيل الدخول باستخدام';
 	@override String get loginWithNextcloud => 'Nextcloud تسجيل الدخول باستخدام';
 	@override late final _Translations$login$ncLoginStep$loginFlow$ar loginFlow = _Translations$login$ncLoginStep$loginFlow$ar._(_root);
 }
@@ -597,7 +597,7 @@ class _Translations$login$encLoginStep$ar extends Translations$login$encLoginSte
 
 	// Translations
 	@override String get enterEncPassword => 'لحماية بياناتك، يرجى إدخال كلمة مرور التشفير:';
-	@override String get newToSaber => '؟ فقط أدخل كلمة مرور تشفير جديدةSaber جديد على';
+	@override String get newToSaber => '؟ فقط أدخل كلمة مرور تشفير جديدةYC Note جديد على';
 	@override String get encPassword => 'كلمة مرور التشفير';
 	@override String get encFaqTitle => 'الأسئلة الشائعة';
 	@override String get wrongEncPassword => 'فشل فك التشفير باستخدام كلمة المرور المقدمة. يرجى المحاولة مرة أخرى.';
@@ -639,7 +639,7 @@ class _Translations$profile$faq$1$ar extends Translations$profile$faq$1$en {
 
 	// Translations
 	@override String get q => 'كيف يمكنني تغيير كلمة المرور الخاصة بي على Nextcloud؟';
-	@override String get a => 'انتقل إلى موقع الخادم الخاص بك وقم بتسجيل الدخول. ثم انتقل إلى الإعدادات > الأمان > تغيير كلمة المرور. ستحتاج إلى تسجيل الخروج وتسجيل الدخول مرة أخرى إلى Saber بعد تغيير كلمة المرور الخاصة بك.';
+	@override String get a => 'انتقل إلى موقع الخادم الخاص بك وقم بتسجيل الدخول. ثم انتقل إلى الإعدادات > الأمان > تغيير كلمة المرور. ستحتاج إلى تسجيل الخروج وتسجيل الدخول مرة أخرى إلى YC Note بعد تغيير كلمة المرور الخاصة بك.';
 }
 
 // Path: profile.faq.2
@@ -650,7 +650,7 @@ class _Translations$profile$faq$2$ar extends Translations$profile$faq$2$en {
 
 	// Translations
 	@override String get q => 'كيف يمكنني تغيير كلمة مرور التشفير الخاصة بي؟';
-	@override String get a => '1. تسجيل الخروج من Saber. تأكد من اكتمال المزامنة قبل تسجيل الخروج حتى لا تفقد أي بيانات (انظر تقدم المزامنة على الشاشة الرئيسية).\n2. اذهب إلى موقع الخادم الخاص بك واحذف مجلد "Saber" الخاص بك. سيؤدي هذا إلى حذف كافة ملاحظاتك من الخادم.\n3. قم بتسجيل الدخول مرة أخرى إلى Saber. يمكنك اختيار كلمة مرور تشفير جديدة عند تسجيل الدخول.\n4. لا تنس تسجيل الخروج وتسجيل الدخول مرة أخرى إلى Saber على أجهزتك الأخرى أيضًا.';
+	@override String get a => '1. تسجيل الخروج من YC Note. تأكد من اكتمال المزامنة قبل تسجيل الخروج حتى لا تفقد أي بيانات (انظر تقدم المزامنة على الشاشة الرئيسية).\n2. اذهب إلى موقع الخادم الخاص بك واحذف مجلد "YC Note" الخاص بك. سيؤدي هذا إلى حذف كافة ملاحظاتك من الخادم.\n3. قم بتسجيل الدخول مرة أخرى إلى YC Note. يمكنك اختيار كلمة مرور تشفير جديدة عند تسجيل الدخول.\n4. لا تنس تسجيل الخروج وتسجيل الدخول مرة أخرى إلى YC Note على أجهزتك الأخرى أيضًا.';
 }
 
 // Path: profile.faq.3
@@ -661,7 +661,7 @@ class _Translations$profile$faq$3$ar extends Translations$profile$faq$3$en {
 
 	// Translations
 	@override String get q => 'كيف يمكنني حذف حسابي؟';
-	@override String get a => 'انتقل إلى موقع الخادم الخاص بك وقم بتسجيل الدخول. ثم انتقل إلى الإعدادات> حذف الحساب.\nإذا كنت تستخدم خادم Saber الرسمي، فسيتم حذف حسابك بعد فترة سماح مدتها أسبوع. يمكنك الاتصال بي على adilhanney@disroot.org خلال هذه الفترة لإلغاء الحذف.\nإذا كنت تستخدم خادم جهة خارجية، فقد لا يكون هناك خيار لحذف حسابك: ستحتاج إلى استشارة خصوصية الخادم سياسة لمزيد من المعلومات.';
+	@override String get a => 'انتقل إلى موقع الخادم الخاص بك وقم بتسجيل الدخول. ثم انتقل إلى الإعدادات> حذف الحساب.\nإذا كنت تستخدم خادم YC Note الرسمي، فسيتم حذف حسابك بعد فترة سماح مدتها أسبوع. يمكنك الاتصال بي على adilhanney@disroot.org خلال هذه الفترة لإلغاء الحذف.\nإذا كنت تستخدم خادم جهة خارجية، فقد لا يكون هناك خيار لحذف حسابك: ستحتاج إلى استشارة خصوصية الخادم سياسة لمزيد من المعلومات.';
 }
 
 // Path: editor.toolbar
@@ -814,7 +814,7 @@ class _Translations$editor$versionTooNew$ar extends Translations$editor$versionT
 	final TranslationsAr _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'تم تحرير هذه الملاحظة باستخدام إصدار أحدث من Saber';
+	@override String get title => 'تم تحرير هذه الملاحظة باستخدام إصدار أحدث من YC Note';
 	@override String get subtitle => 'قد يؤدي تحرير هذه الملاحظة إلى ضياع بعض المعلومات. هل تريد تجاهل هذا وتعديله على أي حال؟';
 	@override String get allowEditing => 'السماح بالتعديل';
 }
@@ -906,7 +906,7 @@ class _Translations$login$ncLoginStep$loginFlow$ar extends Translations$login$nc
 	final TranslationsAr _root; // ignore: unused_field
 
 	// Translations
-	@override String get pleaseAuthorize => 'الخاص بك Nextcloud للوصول إلى حساب Saber الرجاء تفويض';
+	@override String get pleaseAuthorize => 'الخاص بك Nextcloud للوصول إلى حساب YC Note الرجاء تفويض';
 	@override String get followPrompts => 'Nextcloud الرجاء اتباع الإرشادات في واجهة';
 	@override String get browserDidntOpen => 'لم تفتح صفحة تسجيل الدخول؟ اضغط هنا';
 }
@@ -930,7 +930,7 @@ class _Translations$login$encLoginStep$encFaq$1$ar extends Translations$login$en
 
 	// Translations
 	@override String get q => 'لم أقم بتعيين كلمة مرور تشفير حتى الآن. من أين أحصل عليها؟';
-	@override String get a => 'اختر كلمة مرور تشفير جديدة وأدخلها أعلاه.\nبإنشاء مفاتيح التشفير الخاصة بك تلقائيًا من هذه الكلمة Saber سيقوم .';
+	@override String get a => 'اختر كلمة مرور تشفير جديدة وأدخلها أعلاه.\nبإنشاء مفاتيح التشفير الخاصة بك تلقائيًا من هذه الكلمة YC Note سيقوم .';
 }
 
 // Path: login.encLoginStep.encFaq.2

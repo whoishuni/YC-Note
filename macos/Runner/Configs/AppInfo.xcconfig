@@ -5,10 +5,10 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = Saber
+PRODUCT_NAME = YC Note
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.adilhanney.saber
+PRODUCT_BUNDLE_IDENTIFIER = com.yckuo.ycnote
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2026 Adil Hanney. This program comes with absolutely no warranty. This is free software, and you are welcome to redistribute it under certain conditions.

@@ -69,7 +69,7 @@ class _Translations$home$uk extends Translations$home$en {
 	@override late final _Translations$home$titles$uk titles = _Translations$home$titles$uk._(_root);
 	@override late final _Translations$home$tooltips$uk tooltips = _Translations$home$tooltips$uk._(_root);
 	@override late final _Translations$home$create$uk create = _Translations$home$create$uk._(_root);
-	@override String get welcome => 'Вітаємо в Saber';
+	@override String get welcome => 'Вітаємо в YC Note';
 	@override String get invalidFormat => 'Файл який ви обрали не підтримується. Будь ласка оберіть файл типу sbn, sbn2, sba або pdf.';
 	@override String get noFiles => 'Файлів не знайдено';
 	@override String get noPreviewAvailable => 'Попередній перегляд недоступний';
@@ -113,7 +113,7 @@ class _Translations$settings$uk extends Translations$settings$en {
 	@override late final _Translations$settings$customDataDir$uk customDataDir = _Translations$settings$customDataDir$uk._(_root);
 	@override String get systemLanguage => 'Авто';
 	@override String get resyncEverything => 'Пересинхронізувати все';
-	@override String get openDataDir => 'Відкрити папку Saber';
+	@override String get openDataDir => 'Відкрити папку YC Note';
 	@override String get autosaveDisabled => 'Ніколи';
 	@override String get shapeRecognitionDisabled => 'Ніколи';
 	@override List<String> get axisDirections => [
@@ -191,7 +191,7 @@ class _Translations$appInfo$uk extends Translations$appInfo$en {
 	final TranslationsUk _root; // ignore: unused_field
 
 	// Translations
-	@override String licenseNotice({required Object buildYear}) => 'Saber Авторські права © 2022-${buildYear} Adil Hanney\nЦя програма не має жодної гарантії. Це безкоштовне програмне забезпечення, і ви маєте право поширювати його за певних умов.';
+	@override String licenseNotice({required Object buildYear}) => 'YC Note Авторські права © 2022-${buildYear} Adil Hanney\nЦя програма не має жодної гарантії. Це безкоштовне програмне забезпечення, і ви маєте право поширювати його за певних умов.';
 	@override String get debug => 'ВІДЛАДКА';
 	@override String get sponsorButton => 'Натисніть сюди, щоб мене спонсорувати або купити більше сховища';
 	@override String get licenseButton => 'Натисніть сюди, щоб переглянути більше інформації про ліцензію';
@@ -409,7 +409,7 @@ class _Translations$sentry$consent$uk extends Translations$sentry$consent$en {
 	// Translations
 	@override late final _Translations$sentry$consent$description$uk description = _Translations$sentry$consent$description$uk._(_root);
 	@override late final _Translations$sentry$consent$answers$uk answers = _Translations$sentry$consent$answers$uk._(_root);
-	@override String get title => 'Допоможіть покращити Saber?';
+	@override String get title => 'Допоможіть покращити YC Note?';
 }
 
 // Path: settings.prefCategories
@@ -439,7 +439,7 @@ class _Translations$settings$prefLabels$uk extends Translations$settings$prefLab
 	@override String get layoutSize => 'Тип макета';
 	@override String get customAccentColor => 'Кольоровий акцент';
 	@override String get hyperlegibleFont => 'шрифт Atkinson Hyperlegible';
-	@override String get shouldCheckForUpdates => 'Перевірити оновлення Saber';
+	@override String get shouldCheckForUpdates => 'Перевірити оновлення YC Note';
 	@override String get shouldAlwaysAlertForUpdates => 'Швидші оновлення';
 	@override String get allowInsecureConnections => 'Дозволити незахоплені з\'єднання';
 	@override String get editorToolbarAlignment => 'Позиція панелі інструментів';
@@ -458,7 +458,7 @@ class _Translations$settings$prefLabels$uk extends Translations$settings$prefLab
 	@override String get autosave => 'Автозбереження';
 	@override String get shapeRecognitionDelay => 'Затримка розпізнавання форми';
 	@override String get autoStraightenLines => 'Автоматично вирівнювати лінії';
-	@override String get customDataDir => 'Кастомна папка Saber';
+	@override String get customDataDir => 'Кастомна папка YC Note';
 	@override String get sentry => 'Повідомлення про помилку';
 }
 
@@ -472,7 +472,7 @@ class _Translations$settings$prefDescriptions$uk extends Translations$settings$p
 	@override late final _Translations$settings$prefDescriptions$hideFingerDrawing$uk hideFingerDrawing = _Translations$settings$prefDescriptions$hideFingerDrawing$uk._(_root);
 	@override late final _Translations$settings$prefDescriptions$sentry$uk sentry = _Translations$settings$prefDescriptions$sentry$uk._(_root);
 	@override String get hyperlegibleFont => 'Покращує читабельність для користувачів з низьким зором';
-	@override String get allowInsecureConnections => '(Не рекомендовано) Дозволити Saber підключатися до серверів з самопідписаними/недовіреними сертифікатами';
+	@override String get allowInsecureConnections => '(Не рекомендовано) Дозволити YC Note підключатися до серверів з самопідписаними/недовіреними сертифікатами';
 	@override String get preferGreyscale => 'Для е-чманітерів';
 	@override String get autoClearWhiteboardOnExit => 'Очищує дошку після виходу з програми';
 	@override String get disableEraserAfterUse => 'Автоматично повертається до ручки після використання гумки.';
@@ -582,10 +582,10 @@ class _Translations$login$ncLoginStep$uk extends Translations$login$ncLoginStep$
 	// Translations
 	@override late final _Translations$login$ncLoginStep$loginFlow$uk loginFlow = _Translations$login$ncLoginStep$loginFlow$uk._(_root);
 	@override String get whereToStoreData => 'Оберіть, де ви хочете зберігати ваші дані:';
-	@override String get saberNcServer => 'Сервер Nextcloud Saber';
+	@override String get saberNcServer => 'Сервер Nextcloud YC Note';
 	@override String get otherNcServer => 'Інший сервер Nextcloud';
 	@override String get serverUrl => 'URL сервера';
-	@override String get loginWithSaber => 'Увійти через Saber';
+	@override String get loginWithSaber => 'Увійти через YC Note';
 	@override String get loginWithNextcloud => 'Увійти через Nextcloud';
 }
 
@@ -602,7 +602,7 @@ class _Translations$login$encLoginStep$uk extends Translations$login$encLoginSte
 		_Translations$login$encLoginStep$encFaq$2$uk._(_root),
 	];
 	@override String get enterEncPassword => 'Для захисту ваших даних, будь ласка, введіть ваш пароль шифрування:';
-	@override String get newToSaber => 'Нова у Saber? Просто введіть новий пароль шифрування.';
+	@override String get newToSaber => 'Нова у YC Note? Просто введіть новий пароль шифрування.';
 	@override String get encPassword => 'Пароль шифрування';
 	@override String get encFaqTitle => 'Часті запитання';
 	@override String get wrongEncPassword => 'Дешифрування не вдалося з наданим паролем. Будь ласка, спробуйте ввести його ще раз.';
@@ -639,7 +639,7 @@ class _Translations$profile$faq$1$uk extends Translations$profile$faq$1$en {
 
 	// Translations
 	@override String get q => 'Як змінити пароль у Nextcloud?';
-	@override String get a => 'Перейдіть на вебсайт вашого сервера та увійдіть. Потім перейдіть до Налаштування > Безпека > Змінити пароль. Вам потрібно буде вийти та увійти назад до Saber після зміни пароля.';
+	@override String get a => 'Перейдіть на вебсайт вашого сервера та увійдіть. Потім перейдіть до Налаштування > Безпека > Змінити пароль. Вам потрібно буде вийти та увійти назад до YC Note після зміни пароля.';
 }
 
 // Path: profile.faq.2
@@ -650,7 +650,7 @@ class _Translations$profile$faq$2$uk extends Translations$profile$faq$2$en {
 
 	// Translations
 	@override String get q => 'Як змінити пароль шифрування?';
-	@override String get a => '0. Переконайтеся, що синхронізація завершена (подивіться на прогрес синхронізації на головному екрані).\n1. Вийдіть з облікового запису Saber.\n2. Перейдіть на вебсайт вашого сервера та видаліть папку \'Saber\'. Це видалить усі ваші нотатки з сервера.\n3. Увійдіть назад у Saber. Ви можете вибрати новий пароль шифрування при вході.\n4. Не забудьте вийти та увійти назад у Saber на інших пристроях також.';
+	@override String get a => '0. Переконайтеся, що синхронізація завершена (подивіться на прогрес синхронізації на головному екрані).\n1. Вийдіть з облікового запису YC Note.\n2. Перейдіть на вебсайт вашого сервера та видаліть папку \'YC Note\'. Це видалить усі ваші нотатки з сервера.\n3. Увійдіть назад у YC Note. Ви можете вибрати новий пароль шифрування при вході.\n4. Не забудьте вийти та увійти назад у YC Note на інших пристроях також.';
 }
 
 // Path: profile.faq.3
@@ -661,7 +661,7 @@ class _Translations$profile$faq$3$uk extends Translations$profile$faq$3$en {
 
 	// Translations
 	@override String get q => 'Як я можу видалити свій обліковий запис?';
-	@override String get a => 'Натисніть на кнопку "${_root.profile.quickLinks.deleteAccount}" вище та увійдіть у систему, якщо потрібно.\nЯкщо ви використовуєте офіційний сервер Saber, ваш обліковий запис буде видалено після 1 тижневого періоду графіка. Ви можете зв\'язатися зі мною за адресою adilhanney@disroot.org протягом цього періоду, щоб скасувати видалення.\nЯкщо ви використовуєте сторонній сервер, у вас може не бути опції видалення вашого облікового запису: вам потрібно буде ознайомитися з політикою конфіденційності сервера для отримання додаткової інформації.';
+	@override String get a => 'Натисніть на кнопку "${_root.profile.quickLinks.deleteAccount}" вище та увійдіть у систему, якщо потрібно.\nЯкщо ви використовуєте офіційний сервер YC Note, ваш обліковий запис буде видалено після 1 тижневого періоду графіка. Ви можете зв\'язатися зі мною за адресою adilhanney@disroot.org протягом цього періоду, щоб скасувати видалення.\nЯкщо ви використовуєте сторонній сервер, у вас може не бути опції видалення вашого облікового запису: вам потрібно буде ознайомитися з політикою конфіденційності сервера для отримання додаткової інформації.';
 }
 
 // Path: editor.toolbar
@@ -814,7 +814,7 @@ class _Translations$editor$versionTooNew$uk extends Translations$editor$versionT
 	final TranslationsUk _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Ця нота була відредагована за допомогою новішої версії Saber';
+	@override String get title => 'Ця нота була відредагована за допомогою новішої версії YC Note';
 	@override String get subtitle => 'Редагування цієї нотатки може призвести до втрати деякої інформації. Ви хочете проігнорувати це та редагувати все одно?';
 	@override String get allowEditing => 'Дозволити редагування';
 }
@@ -906,7 +906,7 @@ class _Translations$login$ncLoginStep$loginFlow$uk extends Translations$login$nc
 	final TranslationsUk _root; // ignore: unused_field
 
 	// Translations
-	@override String get pleaseAuthorize => 'Будь ласка, авторизуйте Saber для доступу до вашого облікового запису Nextcloud';
+	@override String get pleaseAuthorize => 'Будь ласка, авторизуйте YC Note для доступу до вашого облікового запису Nextcloud';
 	@override String get followPrompts => 'Будь ласка, дотримуйтесь інструкцій у інтерфейсі Nextcloud';
 	@override String get browserDidntOpen => 'Сторінка входу не відкрилася? Натисніть сюди';
 }
@@ -930,7 +930,7 @@ class _Translations$login$encLoginStep$encFaq$1$uk extends Translations$login$en
 
 	// Translations
 	@override String get q => 'Я ще не встановлював пароль шифрування. Де я його отримаю?';
-	@override String get a => 'Оберіть новий пароль шифрування та введіть його вище.\nSaber автоматично згенерує ваші ключі шифрування з цього пароля.';
+	@override String get a => 'Оберіть новий пароль шифрування та введіть його вище.\nYC Note автоматично згенерує ваші ключі шифрування з цього пароля.';
 }
 
 // Path: login.encLoginStep.encFaq.2

@@ -6,6 +6,7 @@ import 'package:saber/components/home/new_folder_dialog.dart';
 import 'package:saber/components/home/rename_folder_button.dart';
 import 'package:saber/components/theming/adaptive_icon.dart';
 import 'package:saber/data/extensions/list_extensions.dart';
+import 'package:saber/data/yc_note/account.dart';
 import 'package:saber/i18n/strings.g.dart';
 
 class GridFolders extends StatelessWidget {
@@ -39,7 +40,7 @@ class GridFolders extends StatelessWidget {
     /// The cards that come before the actual folders
     final extraCards = <_FolderCardType>[
       if (!isAtRoot) .backFolder,
-      .newFolder,
+      if (!ycAccount.isReadOnly) .newFolder,
     ];
 
     return SliverPadding(

@@ -69,7 +69,7 @@ class _Translations$home$ja extends Translations$home$en {
 	@override late final _Translations$home$titles$ja titles = _Translations$home$titles$ja._(_root);
 	@override late final _Translations$home$tooltips$ja tooltips = _Translations$home$tooltips$ja._(_root);
 	@override late final _Translations$home$create$ja create = _Translations$home$create$ja._(_root);
-	@override String get welcome => 'ようこそSaberへ';
+	@override String get welcome => 'ようこそYC Noteへ';
 	@override String get invalidFormat => '選択されたファイルはサポートされていません。sbn/sbn2 ファイルか、PDFファイルを選択してください。';
 	@override String get noFiles => 'ファイルが見つかりません';
 	@override String get noPreviewAvailable => 'プレビューがありません';
@@ -118,7 +118,7 @@ class _Translations$settings$ja extends Translations$settings$en {
 	];
 	@override late final _Translations$settings$reset$ja reset = _Translations$settings$reset$ja._(_root);
 	@override String get resyncEverything => 'すべてを同期する';
-	@override String get openDataDir => 'Saber フォルダーを開く';
+	@override String get openDataDir => 'YC Note フォルダーを開く';
 	@override late final _Translations$settings$customDataDir$ja customDataDir = _Translations$settings$customDataDir$ja._(_root);
 	@override String get autosaveDisabled => '一度もない';
 	@override String get shapeRecognitionDisabled => '一度もない';
@@ -439,7 +439,7 @@ class _Translations$settings$prefLabels$ja extends Translations$settings$prefLab
 	@override String get layoutSize => 'レイアウトの種類';
 	@override String get customAccentColor => 'オリジナルの色';
 	@override String get hyperlegibleFont => 'Hyperlegible フォント';
-	@override String get shouldCheckForUpdates => 'Saberの更新を自動的に確認する';
+	@override String get shouldCheckForUpdates => 'YC Noteの更新を自動的に確認する';
 	@override String get shouldAlwaysAlertForUpdates => 'より速いアップデート';
 	@override String get allowInsecureConnections => '安全でない接続を許可する';
 	@override String get editorToolbarAlignment => '編集ツールバーの位置調整';
@@ -470,7 +470,7 @@ class _Translations$settings$prefDescriptions$ja extends Translations$settings$p
 
 	// Translations
 	@override String get hyperlegibleFont => 'Atkinson Hyperlegibleは、弱視読者の読みやすさを向上させます。';
-	@override String get allowInsecureConnections => '(非推奨) Saber が自己署名/信頼できない証明書を持つサーバーに接続できるようにする';
+	@override String get allowInsecureConnections => '(非推奨) YC Note が自己署名/信頼できない証明書を持つサーバーに接続できるようにする';
 	@override String get preferGreyscale => 'e-inkディスプレイ用';
 	@override String get autoClearWhiteboardOnExit => '他のデバイスと同期されます';
 	@override String get disableEraserAfterUse => '消しゴムの使用後、自動的にペンに戻す';
@@ -581,10 +581,10 @@ class _Translations$login$ncLoginStep$ja extends Translations$login$ncLoginStep$
 
 	// Translations
 	@override String get whereToStoreData => 'データを保存する場所を選択してください:';
-	@override String get saberNcServer => 'Saber の Nextcloud サーバー';
+	@override String get saberNcServer => 'YC Note の Nextcloud サーバー';
 	@override String get otherNcServer => 'その他のNextcloudサーバー';
 	@override String get serverUrl => 'サーバーのURL';
-	@override String get loginWithSaber => 'Saber にログイン';
+	@override String get loginWithSaber => 'YC Note にログイン';
 	@override String get loginWithNextcloud => 'Nextcloudでログイン';
 	@override late final _Translations$login$ncLoginStep$loginFlow$ja loginFlow = _Translations$login$ncLoginStep$loginFlow$ja._(_root);
 }
@@ -597,7 +597,7 @@ class _Translations$login$encLoginStep$ja extends Translations$login$encLoginSte
 
 	// Translations
 	@override String get enterEncPassword => 'データを保護するために、暗号化パスワードを入力してください:';
-	@override String get newToSaber => 'Saber は初めてですか？新しい暗号化パスワードを入力するだけです。';
+	@override String get newToSaber => 'YC Note は初めてですか？新しい暗号化パスワードを入力するだけです。';
 	@override String get encPassword => '暗号化パスワード';
 	@override String get encFaqTitle => 'よくある質問';
 	@override String get wrongEncPassword => '入力されたパスワードでは、復号に失敗しました。 もう一度入力してください。';
@@ -639,7 +639,7 @@ class _Translations$profile$faq$1$ja extends Translations$profile$faq$1$en {
 
 	// Translations
 	@override String get q => 'Nextcloudのパスワードを変更する方法を教えてください';
-	@override String get a => 'サーバーのウェブサイトにアクセスし、ログインします。「設定」>「セキュリティ」>「パスワードの変更」を選択します。パスワード変更後は、Saberからログアウトし、再度ログインする必要があります。';
+	@override String get a => 'サーバーのウェブサイトにアクセスし、ログインします。「設定」>「セキュリティ」>「パスワードの変更」を選択します。パスワード変更後は、YC Noteからログアウトし、再度ログインする必要があります。';
 }
 
 // Path: profile.faq.2
@@ -650,7 +650,7 @@ class _Translations$profile$faq$2$ja extends Translations$profile$faq$2$en {
 
 	// Translations
 	@override String get q => '暗号化パスワードの変更方法を教えてください。';
-	@override String get a => '1. Saberからログアウトする。データが失われないように、ログアウトする前に同期が完了していることを確認してください（ホーム画面で同期の進行状況を確認できます）。\n2. サーバーのウェブサイトにアクセスし、「Saber」フォルダを削除してください。これにより、サーバーからすべてのメモが削除されます。\n3. セーバーに再ログインする。ログイン時に新しい暗号化パスワードを選択できます。\n4. 他のデバイスでもログアウトしてログインし直すことをお忘れなく。';
+	@override String get a => '1. YC Noteからログアウトする。データが失われないように、ログアウトする前に同期が完了していることを確認してください（ホーム画面で同期の進行状況を確認できます）。\n2. サーバーのウェブサイトにアクセスし、「YC Note」フォルダを削除してください。これにより、サーバーからすべてのメモが削除されます。\n3. セーバーに再ログインする。ログイン時に新しい暗号化パスワードを選択できます。\n4. 他のデバイスでもログアウトしてログインし直すことをお忘れなく。';
 }
 
 // Path: profile.faq.3
@@ -661,7 +661,7 @@ class _Translations$profile$faq$3$ja extends Translations$profile$faq$3$en {
 
 	// Translations
 	@override String get q => 'アカウントを削除するにはどうすればよいですか？';
-	@override String get a => '上部の"${_root.profile.quickLinks.deleteAccount}"ボタンをタップし、必要であればログインしてください。Saber公式サーバーを利用している場合、1週間の猶予期間の後にアカウントが削除されます。この期間中であれば、adilhanney@disroot.orgまでご連絡いただければ、削除を取り消すことが可能です。サードパーティのサーバーをご利用の場合、アカウントを削除するオプションがない場合があります。詳細については、ご利用のサーバープライバシーポリシーをご確認ください。';
+	@override String get a => '上部の"${_root.profile.quickLinks.deleteAccount}"ボタンをタップし、必要であればログインしてください。YC Note公式サーバーを利用している場合、1週間の猶予期間の後にアカウントが削除されます。この期間中であれば、adilhanney@disroot.orgまでご連絡いただければ、削除を取り消すことが可能です。サードパーティのサーバーをご利用の場合、アカウントを削除するオプションがない場合があります。詳細については、ご利用のサーバープライバシーポリシーをご確認ください。';
 }
 
 // Path: editor.toolbar
@@ -814,7 +814,7 @@ class _Translations$editor$versionTooNew$ja extends Translations$editor$versionT
 	final TranslationsJa _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'このメモは新しいバージョンのSaberを使用して編集されたものです';
+	@override String get title => 'このメモは新しいバージョンのYC Noteを使用して編集されたものです';
 	@override String get subtitle => 'このメモを編集すると、いくつかの情報が失われる可能性があります。これを無視して編集しますか？';
 	@override String get allowEditing => '編集を許可する';
 }
@@ -905,7 +905,7 @@ class _Translations$login$ncLoginStep$loginFlow$ja extends Translations$login$nc
 	final TranslationsJa _root; // ignore: unused_field
 
 	// Translations
-	@override String get pleaseAuthorize => 'Saber に登録して、あなたのNextcloudアカウントにアクセスしてください';
+	@override String get pleaseAuthorize => 'YC Note に登録して、あなたのNextcloudアカウントにアクセスしてください';
 	@override String get followPrompts => 'Nextcloud のプロンプトに従ってください';
 	@override String get browserDidntOpen => 'ログインページが開かなかった場合はここをクリック';
 }
@@ -928,7 +928,7 @@ class _Translations$login$encLoginStep$encFaq$1$ja extends Translations$login$en
 
 	// Translations
 	@override String get q => '暗号化パスワードは未設定です。 どこで設定できますか？';
-	@override String get a => '両方に新しい暗号化パスワードを入力してください。\nSaber は自動で新しい暗号化キーを生成します。';
+	@override String get a => '両方に新しい暗号化パスワードを入力してください。\nYC Note は自動で新しい暗号化キーを生成します。';
 }
 
 // Path: login.encLoginStep.encFaq.2

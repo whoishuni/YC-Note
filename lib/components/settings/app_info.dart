@@ -15,13 +15,13 @@ class const AppInfo({super.key}) extends StatelessWidget {
     'https://github.com/sponsors/adil192',
   );
   static final Uri privacyPolicyUrl = Uri.parse(
-    'https://saber.adil.hanney.org/privacy-policy/',
+    'https://yckuo.com/yc_note/',
   );
   static final Uri licenseUrl = Uri.parse(
     'https://github.com/saber-notes/saber/blob/main/LICENSE.md',
   );
   static final Uri releasesUrl = Uri.parse(
-    'https://github.com/saber-notes/saber/releases',
+    'https://github.com/whoishuni/YC-Note/releases',
   );
 
   static String get info => [

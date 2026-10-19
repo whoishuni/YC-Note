@@ -70,7 +70,7 @@ class _Translations$home$pt_BR extends Translations$home$pt {
 	@override late final _Translations$home$titles$pt_BR titles = _Translations$home$titles$pt_BR._(_root);
 	@override late final _Translations$home$tooltips$pt_BR tooltips = _Translations$home$tooltips$pt_BR._(_root);
 	@override late final _Translations$home$create$pt_BR create = _Translations$home$create$pt_BR._(_root);
-	@override String get welcome => 'Bem-vindo(a) ao Saber';
+	@override String get welcome => 'Bem-vindo(a) ao YC Note';
 	@override String get invalidFormat => 'O arquivo que você selecionou não é suportado. Por favor selecione um arquivo .sbn, .sbn2, .sba ou .pdf.';
 	@override String get noFiles => 'Nenhum arquivo encontrado';
 	@override String get noPreviewAvailable => 'Nenhuma prévia disponível';
@@ -121,7 +121,7 @@ class _Translations$settings$pt_BR extends Translations$settings$pt {
 	@override late final _Translations$settings$customDataDir$pt_BR customDataDir = _Translations$settings$customDataDir$pt_BR._(_root);
 	@override String get autosaveDisabled => 'Nunca';
 	@override String get shapeRecognitionDisabled => 'Nunca';
-	@override String get openDataDir => 'Abra a pasta Saber';
+	@override String get openDataDir => 'Abra a pasta YC Note';
 	@override String get resyncEverything => 'Resync tudo';
 }
 
@@ -405,7 +405,7 @@ class _Translations$sentry$consent$pt_BR extends Translations$sentry$consent$pt 
 	final TranslationsPtBr _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Ajudar a melhorar Saber?';
+	@override String get title => 'Ajudar a melhorar YC Note?';
 	@override late final _Translations$sentry$consent$description$pt_BR description = _Translations$sentry$consent$description$pt_BR._(_root);
 	@override late final _Translations$sentry$consent$answers$pt_BR answers = _Translations$sentry$consent$answers$pt_BR._(_root);
 }
@@ -437,7 +437,7 @@ class _Translations$settings$prefLabels$pt_BR extends Translations$settings$pref
 	@override String get layoutSize => 'Tipo de leiaute';
 	@override String get customAccentColor => 'Cor de destaque personalizada';
 	@override String get hyperlegibleFont => 'Fonte hiperlegível';
-	@override String get shouldCheckForUpdates => 'Verificar automaticamente as atualizações do Saber';
+	@override String get shouldCheckForUpdates => 'Verificar automaticamente as atualizações do YC Note';
 	@override String get shouldAlwaysAlertForUpdates => 'Atualizações mais rápidas';
 	@override String get allowInsecureConnections => 'Permitir conexões inseguras';
 	@override String get editorToolbarAlignment => 'Alinhamento da barra de ferramentas do editor';
@@ -456,7 +456,7 @@ class _Translations$settings$prefLabels$pt_BR extends Translations$settings$pref
 	@override String get autosave => 'Auto-salvar';
 	@override String get shapeRecognitionDelay => 'Atraso no reconhecimento de formatos';
 	@override String get autoStraightenLines => 'Auto alinhamento de linhas';
-	@override String get customDataDir => 'Pasta Saber personalizada';
+	@override String get customDataDir => 'Pasta YC Note personalizada';
 	@override String get sentry => 'Reportar erro';
 }
 
@@ -468,7 +468,7 @@ class _Translations$settings$prefDescriptions$pt_BR extends Translations$setting
 
 	// Translations
 	@override String get hyperlegibleFont => 'Atkinson Hyperlegible aumenta a legibilidade para leitores com baixa visão';
-	@override String get allowInsecureConnections => '(Não recomendado) Permitir que o Saber se conecte a servidores com certificados autoassinados/não-confiáveis';
+	@override String get allowInsecureConnections => '(Não recomendado) Permitir que o YC Note se conecte a servidores com certificados autoassinados/não-confiáveis';
 	@override String get preferGreyscale => 'Para telas e-ink';
 	@override String get autoClearWhiteboardOnExit => 'Ainda será sincronizado com seus outros dispositivos';
 	@override String get disableEraserAfterUse => 'Voltar automaticamente para a caneta depois de usar a borracha';
@@ -578,12 +578,12 @@ class _Translations$login$ncLoginStep$pt_BR extends Translations$login$ncLoginSt
 	final TranslationsPtBr _root; // ignore: unused_field
 
 	// Translations
-	@override String get saberNcServer => 'Servidor Nextcloud de Saber';
+	@override String get saberNcServer => 'Servidor Nextcloud de YC Note';
 	@override String get serverUrl => 'URL do servidor';
 	@override late final _Translations$login$ncLoginStep$loginFlow$pt_BR loginFlow = _Translations$login$ncLoginStep$loginFlow$pt_BR._(_root);
 	@override String get whereToStoreData => 'Escolha onde deseja armazenar seus dados:';
 	@override String get otherNcServer => 'Outro servidor Nextcloud';
-	@override String get loginWithSaber => 'Faça login com Saber';
+	@override String get loginWithSaber => 'Faça login com YC Note';
 	@override String get loginWithNextcloud => 'Faça login com Nextcloud';
 }
 
@@ -596,7 +596,7 @@ class _Translations$login$encLoginStep$pt_BR extends Translations$login$encLogin
 	// Translations
 	@override String get encFaqTitle => 'Perguntas frequentes';
 	@override String get enterEncPassword => 'Para proteger seus dados, digite sua senha de criptografia:';
-	@override String get newToSaber => 'Novo no Saber';
+	@override String get newToSaber => 'Novo no YC Note';
 	@override String get encPassword => 'Senha de criptografia';
 	@override String get wrongEncPassword => 'A descriptografia falhou com a senha fornecida. Por favor, tente inseri-lo novamente.';
 	@override String get connectionFailed => 'Algo deu errado ao conectar-se ao servidor. Por favor, tente novamente mais tarde.';
@@ -637,7 +637,7 @@ class _Translations$profile$faq$1$pt_BR extends Translations$profile$faq$1$en {
 
 	// Translations
 	@override String get q => 'Como eu mudo a minha senha do Nextcloud?';
-	@override String get a => 'Vá para o website do seu servidor e faça login. Então vá para Configurações > Segurança > Mudar senha. Você precisará sair da conta e fazer login novamente no Saber depois de mudar a sua senha.';
+	@override String get a => 'Vá para o website do seu servidor e faça login. Então vá para Configurações > Segurança > Mudar senha. Você precisará sair da conta e fazer login novamente no YC Note depois de mudar a sua senha.';
 }
 
 // Path: profile.faq.2
@@ -648,7 +648,7 @@ class _Translations$profile$faq$2$pt_BR extends Translations$profile$faq$2$en {
 
 	// Translations
 	@override String get q => 'Como eu mudo a minha senha de criptografia?';
-	@override String get a => '1. Saia da sua conta do Saber. Tenha certeza de que a sincronização foi finalizada antes de sair, de modo que você não perca nenhum dado (veja o progresso da sincronização na tela inicial).\n2. Vá para o website do seu servidor e apague a sua pasta do Saber. Isso apagará todas as suas notas do servidor.\n3. Faça login na sua conta do Saber. Você pode escolher uma nova senha de criptografia quando fizer login.\n4. Não se esqueça de sair e fazer login novamente no Saber em seus outros dispositivos também.';
+	@override String get a => '1. Saia da sua conta do YC Note. Tenha certeza de que a sincronização foi finalizada antes de sair, de modo que você não perca nenhum dado (veja o progresso da sincronização na tela inicial).\n2. Vá para o website do seu servidor e apague a sua pasta do YC Note. Isso apagará todas as suas notas do servidor.\n3. Faça login na sua conta do YC Note. Você pode escolher uma nova senha de criptografia quando fizer login.\n4. Não se esqueça de sair e fazer login novamente no YC Note em seus outros dispositivos também.';
 }
 
 // Path: profile.faq.3
@@ -659,7 +659,7 @@ class _Translations$profile$faq$3$pt_BR extends Translations$profile$faq$3$en {
 
 	// Translations
 	@override String get q => 'Como eu posso apagar a minha conta?';
-	@override String get a => 'Toque no "${_root.profile.quickLinks.deleteAccount}" botão acima, e faça login se necessário.\nSe você estiver usando o servidor oficial do Saber, a sua conta será apagada depois de um período de carência de uma semana. Você pode entrar em contato comigo em adilhanney@disroot.org durante esse período para cancelar a exclusão.\nSe você estiver usando um servidor de terceiros, pode ser que não haja uma opção de apagar a sua conta: você precisará consultar a política de privacidade do servidor para mais informações.';
+	@override String get a => 'Toque no "${_root.profile.quickLinks.deleteAccount}" botão acima, e faça login se necessário.\nSe você estiver usando o servidor oficial do YC Note, a sua conta será apagada depois de um período de carência de uma semana. Você pode entrar em contato comigo em adilhanney@disroot.org durante esse período para cancelar a exclusão.\nSe você estiver usando um servidor de terceiros, pode ser que não haja uma opção de apagar a sua conta: você precisará consultar a política de privacidade do servidor para mais informações.';
 }
 
 // Path: editor.toolbar
@@ -812,7 +812,7 @@ class _Translations$editor$versionTooNew$pt_BR extends Translations$editor$versi
 	final TranslationsPtBr _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Esta nota foi editada usando uma versão mais recente do Saber';
+	@override String get title => 'Esta nota foi editada usando uma versão mais recente do YC Note';
 	@override String get subtitle => 'A edição desta nota pode resultar na perda de algumas informações. Deseja ignorar isso e editá-la mesmo assim?';
 	@override String get allowEditing => 'Permitir edição';
 }
@@ -904,7 +904,7 @@ class _Translations$login$ncLoginStep$loginFlow$pt_BR extends Translations$login
 	final TranslationsPtBr _root; // ignore: unused_field
 
 	// Translations
-	@override String get pleaseAuthorize => 'Autorize o Saber a acessar sua conta Nextcloud';
+	@override String get pleaseAuthorize => 'Autorize o YC Note a acessar sua conta Nextcloud';
 	@override String get followPrompts => 'Por favor, siga as instruções no seu navegador.';
 	@override String get browserDidntOpen => 'O navegador não abriu';
 }
@@ -917,7 +917,7 @@ class _Translations$login$encLoginStep$encFaq$0$pt_BR extends Translations$login
 
 	// Translations
 	@override String get q => 'O que é uma senha de criptografia?';
-	@override String get a => 'A senha de criptografia é usada para criptografar os seus dados antes de eles serem enviados ao servidor. Você a escolhe quando faz login pela primeira vez no Saber, e ela não está relacionada à sua conta/senha do Nextcloud.\nNinguém pode acessar as suas notas no servidor sem a sua senha de criptografia. Isso também significa que, se você esquecer a sua senha de criptografia, perderá o acesso aos seus dados.';
+	@override String get a => 'A senha de criptografia é usada para criptografar os seus dados antes de eles serem enviados ao servidor. Você a escolhe quando faz login pela primeira vez no YC Note, e ela não está relacionada à sua conta/senha do Nextcloud.\nNinguém pode acessar as suas notas no servidor sem a sua senha de criptografia. Isso também significa que, se você esquecer a sua senha de criptografia, perderá o acesso aos seus dados.';
 }
 
 // Path: login.encLoginStep.encFaq.1

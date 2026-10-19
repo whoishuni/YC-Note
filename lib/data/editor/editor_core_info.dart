@@ -17,6 +17,7 @@ import 'package:saber/data/file_manager/file_manager.dart';
 import 'package:saber/data/flavor_config.dart';
 import 'package:saber/data/prefs.dart';
 import 'package:saber/data/tools/stroke_properties.dart';
+import 'package:saber/data/yc_note/account.dart';
 import 'package:saber/pages/editor/editor.dart';
 import 'package:sbn/canvas_background_pattern.dart';
 import 'package:sbn/has_size.dart';
@@ -57,7 +58,7 @@ class EditorCoreInfo {
 
   /// Whether the note is read-only.
   /// See [readOnlyReason] for the reason.
-  bool get readOnly => readOnlyReason != null;
+  bool get readOnly => readOnlyReason != null || ycAccount.isReadOnly;
 
   String filePath;
 

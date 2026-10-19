@@ -13,8 +13,9 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:saber/components/home/sort_button.dart';
-import 'package:saber/data/nextcloud/saber_syncer.dart';
 import 'package:saber/data/prefs.dart';
+import 'package:saber/data/yc_note/account.dart';
+import 'package:saber/data/yc_note/sync.dart';
 import 'package:saber/i18n/strings.g.dart';
 import 'package:saber/pages/editor/editor.dart';
 import 'package:saver_gallery/saver_gallery.dart';
@@ -27,7 +28,7 @@ class FileManager {
 
   static final log = Logger('FileManager');
 
-  static const appRootDirectoryPrefix = 'Saber';
+  static const appRootDirectoryPrefix = 'YC Note';
 
   /// This isn't final because isolates sometimes init multiple times.
   /// Realistically, this value never changes.
@@ -73,7 +74,7 @@ class FileManager {
     FileManager.documentsDirectory =
         documentsDirectory ?? await getDocumentsDirectory();
 
-    if (shouldWatchRootDirectory) unawaited(watchRootDirectory());
+    if (shouldWatchRootDirectory) await watchRootDirectory();
   }
 
   static Future<String> getDocumentsDirectory() async =>
@@ -172,7 +173,6 @@ class FileManager {
     });
   }
 
-  @visibleForTesting
   static void broadcastFileWrite(FileOperationType type, String path) async {
     if (!fileWriteStream.hasListener) return;
 
@@ -241,6 +241,7 @@ class FileManager {
     bool alsoUpload = true,
     DateTime? lastModified,
   }) async {
+    if (ycAccount.isReadOnly) return;
     filePath = _sanitisePath(filePath);
     log.fine('Writing to $filePath');
 
@@ -264,7 +265,7 @@ class FileManager {
 
     void afterWrite() {
       broadcastFileWrite(FileOperationType.write, filePath);
-      if (alsoUpload) syncer.uploader.enqueueRel(filePath);
+      if (alsoUpload) ycSync.schedule();
       if (filePath.endsWith(Editor.extension)) {
         _removeReferences(
           '${filePath.substring(0, filePath.length - Editor.extension.length)}'
@@ -278,6 +279,7 @@ class FileManager {
   }
 
   static Future<void> createFolder(String folderPath) async {
+    if (ycAccount.isReadOnly) return;
     folderPath = _sanitisePath(folderPath);
 
     final dir = Directory(documentsDirectory + folderPath);
@@ -377,6 +379,7 @@ class FileManager {
     bool replaceExistingFile = false,
     bool alsoMoveAssets = true,
   }) async {
+    if (ycAccount.isReadOnly) return fromPath;
     fromPath = _sanitisePath(fromPath);
     toPath = _sanitisePath(toPath);
 
@@ -403,8 +406,8 @@ class FileManager {
       log.warning('Tried to move non-existent file from $fromPath to $toPath');
     }
 
-    syncer.uploader.enqueueRel(fromPath);
-    syncer.uploader.enqueueRel(toPath);
+    ycSync.schedule();
+    ycSync.schedule();
 
     _renameReferences(fromPath, toPath);
     broadcastFileWrite(FileOperationType.delete, fromPath);
@@ -446,13 +449,14 @@ class FileManager {
     bool alsoUpload = true,
     bool alsoDeleteAssets = true,
   }) async {
+    if (ycAccount.isReadOnly) return;
     filePath = _sanitisePath(filePath);
 
     final file = getFile(filePath);
     if (!file.existsSync()) return;
     await file.delete();
 
-    if (alsoUpload) syncer.uploader.enqueueRel(filePath);
+    if (alsoUpload) ycSync.schedule();
 
     _removeReferences(filePath);
     broadcastFileWrite(FileOperationType.delete, filePath);
@@ -497,6 +501,7 @@ class FileManager {
   }
 
   static Future renameDirectory(String directoryPath, String newName) async {
+    if (ycAccount.isReadOnly) return;
     directoryPath = _sanitisePath(directoryPath);
 
     final directory = Directory(documentsDirectory + directoryPath);
@@ -526,6 +531,7 @@ class FileManager {
     String directoryPath, [
     bool recursive = true,
   ]) async {
+    if (ycAccount.isReadOnly) return;
     directoryPath = _sanitisePath(directoryPath);
 
     final directory = Directory(documentsDirectory + directoryPath);
@@ -805,6 +811,7 @@ class FileManager {
     String? extension,
     bool awaitWrite = true,
   }) async {
+    if (ycAccount.isReadOnly) return null;
     assert(
       parentDir == null || parentDir.startsWith('/') && parentDir.endsWith('/'),
     );

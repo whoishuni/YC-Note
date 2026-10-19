@@ -16,10 +16,10 @@ abstract class UpdateManager {
   static final log = Logger('UpdateManager');
 
   static final Uri versionUrl = Uri.parse(
-    'https://raw.githubusercontent.com/saber-notes/saber/main/lib/data/version.dart',
+    'https://raw.githubusercontent.com/whoishuni/YC-Note/main/lib/data/version.dart',
   );
   static final Uri apiUrl = Uri.parse(
-    'https://api.github.com/repos/saber-notes/saber/releases/latest',
+    'https://api.github.com/repos/whoishuni/YC-Note/releases/latest',
   );
 
   /// The availability of an update.
@@ -211,7 +211,7 @@ abstract class UpdateManager {
     assert(newestVersion != null);
 
     final url =
-        'https://raw.githubusercontent.com/saber-notes/saber/main/'
+        'https://raw.githubusercontent.com/whoishuni/YC-Note/main/'
         'metadata/$localeCode/changelogs/$newestVersion.txt';
     log.info('Downloading changelog from $url');
 

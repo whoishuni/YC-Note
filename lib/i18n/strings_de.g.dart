@@ -69,7 +69,7 @@ class _Translations$home$de extends Translations$home$en {
 	@override late final _Translations$home$titles$de titles = _Translations$home$titles$de._(_root);
 	@override late final _Translations$home$tooltips$de tooltips = _Translations$home$tooltips$de._(_root);
 	@override late final _Translations$home$create$de create = _Translations$home$create$de._(_root);
-	@override String get welcome => 'Willkommen bei Saber';
+	@override String get welcome => 'Willkommen bei YC Note';
 	@override String get invalidFormat => 'Das ausgewählte Dateiformat wird nicht unterstützt. Bitte wähle eine Datei mit dem Format sbn, sbn2, sba oder pdf.';
 	@override String get noFiles => 'Keine Dateien gefunden';
 	@override String get noPreviewAvailable => 'Keine Vorschau verfügbar';
@@ -118,7 +118,7 @@ class _Translations$settings$de extends Translations$settings$en {
 	];
 	@override late final _Translations$settings$reset$de reset = _Translations$settings$reset$de._(_root);
 	@override String get resyncEverything => 'Alles neu Synchronisieren';
-	@override String get openDataDir => 'Saber-Ordner öffnen';
+	@override String get openDataDir => 'YC Note-Ordner öffnen';
 	@override late final _Translations$settings$customDataDir$de customDataDir = _Translations$settings$customDataDir$de._(_root);
 	@override String get autosaveDisabled => 'Nie';
 	@override String get shapeRecognitionDisabled => 'Nie';
@@ -407,7 +407,7 @@ class _Translations$sentry$consent$de extends Translations$sentry$consent$en {
 	final TranslationsDe _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Helfen, Saber zu verbessern?';
+	@override String get title => 'Helfen, YC Note zu verbessern?';
 	@override late final _Translations$sentry$consent$description$de description = _Translations$sentry$consent$description$de._(_root);
 	@override late final _Translations$sentry$consent$answers$de answers = _Translations$sentry$consent$answers$de._(_root);
 }
@@ -439,7 +439,7 @@ class _Translations$settings$prefLabels$de extends Translations$settings$prefLab
 	@override String get layoutSize => 'Größe des Layouts';
 	@override String get customAccentColor => 'Benutzerdefinierte Akzentfarbe';
 	@override String get hyperlegibleFont => 'Verbesserte Lesbarkeit der Schrift';
-	@override String get shouldCheckForUpdates => 'Suche nach Updates für Saber';
+	@override String get shouldCheckForUpdates => 'Suche nach Updates für YC Note';
 	@override String get shouldAlwaysAlertForUpdates => 'Schneller aktualisieren';
 	@override String get allowInsecureConnections => 'Unsichere Verbindung erlauben';
 	@override String get editorToolbarAlignment => 'Position der Toolleiste';
@@ -458,7 +458,7 @@ class _Translations$settings$prefLabels$de extends Translations$settings$prefLab
 	@override String get autosave => 'Automatisches Backup';
 	@override String get shapeRecognitionDelay => 'Verzögerung der Formerkennung';
 	@override String get autoStraightenLines => 'Linien automatisch begradigen';
-	@override String get customDataDir => 'Eigener Saber-Ordner';
+	@override String get customDataDir => 'Eigener YC Note-Ordner';
 	@override String get sentry => 'Fehlerberichterstattung';
 }
 
@@ -470,7 +470,7 @@ class _Translations$settings$prefDescriptions$de extends Translations$settings$p
 
 	// Translations
 	@override String get hyperlegibleFont => 'Verbessert die Lesbarkeit für Menschen mit geringer Sehkraft';
-	@override String get allowInsecureConnections => 'Saber erlauben, unsichere Zertifikaten zu verwenden (Nicht empfohlen)';
+	@override String get allowInsecureConnections => 'YC Note erlauben, unsichere Zertifikaten zu verwenden (Nicht empfohlen)';
 	@override String get preferGreyscale => 'Optimierung für E-Ink-Displays';
 	@override String get autoClearWhiteboardOnExit => 'Löscht das Whiteboard beim Beenden der App';
 	@override String get disableEraserAfterUse => 'Nach dem Nutzen des Radierers automatisch zum Stift zurückwechseln';
@@ -581,10 +581,10 @@ class _Translations$login$ncLoginStep$de extends Translations$login$ncLoginStep$
 
 	// Translations
 	@override String get whereToStoreData => 'Wähle, wo du deine Daten speichern willst:';
-	@override String get saberNcServer => 'Sabers Nextcloud-Server';
+	@override String get saberNcServer => 'YC Notes Nextcloud-Server';
 	@override String get otherNcServer => 'Anderer Nextcloud-Server';
 	@override String get serverUrl => 'Server URL';
-	@override String get loginWithSaber => 'Mit Saber anmelden';
+	@override String get loginWithSaber => 'Mit YC Note anmelden';
 	@override String get loginWithNextcloud => 'Mit Nextcloud anmelden';
 	@override late final _Translations$login$ncLoginStep$loginFlow$de loginFlow = _Translations$login$ncLoginStep$loginFlow$de._(_root);
 }
@@ -597,7 +597,7 @@ class _Translations$login$encLoginStep$de extends Translations$login$encLoginSte
 
 	// Translations
 	@override String get enterEncPassword => 'Gib dein Verschlüsselungspasswort an, um deine Daten zu schützen:';
-	@override String get newToSaber => 'Neu bei Saber? Gib einfach ein neues Verschlüsselungspasswort an.';
+	@override String get newToSaber => 'Neu bei YC Note? Gib einfach ein neues Verschlüsselungspasswort an.';
 	@override String get encPassword => 'Verschlüsselungspasswort';
 	@override String get encFaqTitle => 'Häufig gestellte Fragen';
 	@override String get wrongEncPassword => 'Entschlüsselung mit dem angegebenen Passwort fehlgeschlagen. Bitte versuche es erneut einzugeben.';
@@ -639,7 +639,7 @@ class _Translations$profile$faq$1$de extends Translations$profile$faq$1$en {
 
 	// Translations
 	@override String get q => 'Wie ändere ich mein Nextcloud-Passwort?';
-	@override String get a => 'Öffne die Server-Startseite und melde dich an. Unter Einstellungen > Sicherheit > Passwort, kannst du dein Passwort ändern. Nachdem du dein Passwort geändert hast, musst du dich in Saber ab- und wieder anmelden.';
+	@override String get a => 'Öffne die Server-Startseite und melde dich an. Unter Einstellungen > Sicherheit > Passwort, kannst du dein Passwort ändern. Nachdem du dein Passwort geändert hast, musst du dich in YC Note ab- und wieder anmelden.';
 }
 
 // Path: profile.faq.2
@@ -650,7 +650,7 @@ class _Translations$profile$faq$2$de extends Translations$profile$faq$2$en {
 
 	// Translations
 	@override String get q => 'Wie ändere ich mein Verschlüsselungspasswort?';
-	@override String get a => '0. Bitte stelle zuerst sicher, dass alle Daten korrekt synchronisiert wurden, damit du keine Daten verlierst (du kannst den Fortschritt auf dem Startbildschirm prüfen).\n1. Melde dich in Saber ab.\n2. Öffne die Server-Startseite und lösche den „Saber“-Order. Dadurch werden alle Notizen vom Server gelöscht.\n3. Melde dich wieder in Saber an. Du wirst nach einem neuen Verschlüsselungspasswort gefragt.\n4. Vergiss nicht dich auf anderen Geräten in Saber ab- und wieder anzumelden.';
+	@override String get a => '0. Bitte stelle zuerst sicher, dass alle Daten korrekt synchronisiert wurden, damit du keine Daten verlierst (du kannst den Fortschritt auf dem Startbildschirm prüfen).\n1. Melde dich in YC Note ab.\n2. Öffne die Server-Startseite und lösche den „YC Note“-Order. Dadurch werden alle Notizen vom Server gelöscht.\n3. Melde dich wieder in YC Note an. Du wirst nach einem neuen Verschlüsselungspasswort gefragt.\n4. Vergiss nicht dich auf anderen Geräten in YC Note ab- und wieder anzumelden.';
 }
 
 // Path: profile.faq.3
@@ -661,7 +661,7 @@ class _Translations$profile$faq$3$de extends Translations$profile$faq$3$en {
 
 	// Translations
 	@override String get q => 'Wie lösche ich meinen Account?';
-	@override String get a => 'Drücke oben den „${_root.profile.quickLinks.deleteAccount}“-Button und melde dich gegebenenfalls an.\nWenn du den offiziellen Saber-Server nutzt, wird dein Account automatisch nach einer Woche gelöscht. Du kannst mich während dieser Woche unter adilhanney@disroot.org kontaktieren um die Löschung rückgängig zu machen.\nWenn du einen anderen Server nutzt, kann es sein, dass du deinen Account nicht löschen kannst: Für mehr Information kannst du in der Datenschutzbestimmung des Servers nachgucken.';
+	@override String get a => 'Drücke oben den „${_root.profile.quickLinks.deleteAccount}“-Button und melde dich gegebenenfalls an.\nWenn du den offiziellen YC Note-Server nutzt, wird dein Account automatisch nach einer Woche gelöscht. Du kannst mich während dieser Woche unter adilhanney@disroot.org kontaktieren um die Löschung rückgängig zu machen.\nWenn du einen anderen Server nutzt, kann es sein, dass du deinen Account nicht löschen kannst: Für mehr Information kannst du in der Datenschutzbestimmung des Servers nachgucken.';
 }
 
 // Path: editor.toolbar
@@ -814,7 +814,7 @@ class _Translations$editor$versionTooNew$de extends Translations$editor$versionT
 	final TranslationsDe _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Diese Notiz wurde mit einer neueren Version von Saber bearbeitet';
+	@override String get title => 'Diese Notiz wurde mit einer neueren Version von YC Note bearbeitet';
 	@override String get subtitle => 'Durch das Bearbeiten dieser Notiz können Daten verloren gehen. Möchtest du sie trotzdem bearbeiten?';
 	@override String get allowEditing => 'Schreibschutz aufheben';
 }
@@ -906,7 +906,7 @@ class _Translations$login$ncLoginStep$loginFlow$de extends Translations$login$nc
 	final TranslationsDe _root; // ignore: unused_field
 
 	// Translations
-	@override String get pleaseAuthorize => 'Bitte gib Saber Zugriff auf dein Nextcloud Konto';
+	@override String get pleaseAuthorize => 'Bitte gib YC Note Zugriff auf dein Nextcloud Konto';
 	@override String get followPrompts => 'Bitte folge den Anweisungen in der Nextcloud-Oberfläche';
 	@override String get browserDidntOpen => 'Die Anmeldeseite hat sich nicht geöffnet? Klicke hier';
 }
@@ -930,7 +930,7 @@ class _Translations$login$encLoginStep$encFaq$1$de extends Translations$login$en
 
 	// Translations
 	@override String get q => 'Ich habe noch kein Verschlüsselungspasswort festgelegt. Wo bekomme ich das her?';
-	@override String get a => 'Wähle ein neues Verschlüsselungspasswort und gib es oben ein.\nSaber wird mit diesem Passwort automatisch deine Schlüssel generieren.';
+	@override String get a => 'Wähle ein neues Verschlüsselungspasswort und gib es oben ein.\nYC Note wird mit diesem Passwort automatisch deine Schlüssel generieren.';
 }
 
 // Path: login.encLoginStep.encFaq.2

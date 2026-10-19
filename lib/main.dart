@@ -18,17 +18,18 @@ import 'package:saber/components/canvas/pencil_shader.dart';
 import 'package:saber/components/theming/dynamic_material_app.dart';
 import 'package:saber/data/file_manager/file_manager.dart';
 import 'package:saber/data/flavor_config.dart';
-import 'package:saber/data/nextcloud/nc_http_overrides.dart';
 import 'package:saber/data/nextcloud/saber_syncer.dart';
 import 'package:saber/data/prefs.dart';
 import 'package:saber/data/routes.dart';
 import 'package:saber/data/sentry/sentry_init.dart';
 import 'package:saber/data/tools/stroke_properties.dart';
+import 'package:saber/data/yc_note/account.dart';
+import 'package:saber/data/yc_note/sync.dart';
 import 'package:saber/i18n/strings.g.dart';
 import 'package:saber/pages/editor/editor.dart';
 import 'package:saber/pages/home/home.dart';
 import 'package:saber/pages/logs.dart';
-import 'package:saber/pages/user/login.dart';
+import 'package:saber/pages/user/yc_login.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:worker_manager/worker_manager.dart';
 import 'package:workmanager/workmanager.dart';
@@ -84,7 +85,7 @@ Future<void> appRunner(List<String> args) async {
   Stows.markAsOnMainIsolate();
 
   await Future.wait([
-    stows.customDataDir.waitUntilRead().then((_) => FileManager.init()),
+    FileManager.init(shouldWatchRootDirectory: false),
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
       windowManager.ensureInitialized(),
     workerManager.init(
@@ -103,7 +104,6 @@ Future<void> appRunner(List<String> args) async {
 
   setLocale();
   stows.locale.addListener(setLocale);
-  stows.customDataDir.addListener(FileManager.migrateDataDir);
   pdfrxFlutterInitialize();
 
   LicenseRegistry.addLicense(() async* {
@@ -118,10 +118,9 @@ Future<void> appRunner(List<String> args) async {
     }
   });
 
-  HttpOverrides.global = NcHttpOverrides();
+  await ycAccount.initialize();
   runApp(SentryWidget(child: TranslationProvider(child: const App())));
-  startSyncAfterLoaded();
-  setupBackgroundSync();
+  ycSync.start();
 }
 
 void startSyncAfterLoaded() async {
@@ -238,6 +237,17 @@ class const App({super.key}) extends StatefulWidget {
   });
   static final _router = GoRouter(
     initialLocation: initialLocation,
+    refreshListenable: ycAccount,
+    redirect: (context, state) {
+      if (!ycAccount.canUse && state.matchedLocation != RoutePaths.login) {
+        return RoutePaths.login;
+      }
+      if (state.matchedLocation == RoutePaths.edit && !ycAccount.canWrite &&
+          (state.uri.queryParameters['path'] == null || state.uri.queryParameters['pdfPath'] != null)) {
+        return initialLocation;
+      }
+      return null;
+    },
     routes: <GoRoute>[
       GoRoute(path: '/', redirect: (context, state) => initialLocation),
       GoRoute(
@@ -249,14 +259,16 @@ class const App({super.key}) extends StatefulWidget {
       ),
       GoRoute(
         path: RoutePaths.edit,
-        builder: (context, state) => Editor(
-          path: state.uri.queryParameters['path'],
-          pdfPath: state.uri.queryParameters['pdfPath'],
+        builder: (context, state) => YcEditorGate(
+          builder: () => Editor(
+            path: state.uri.queryParameters['path'],
+            pdfPath: state.uri.queryParameters['pdfPath'],
+          ),
         ),
       ),
       GoRoute(
         path: RoutePaths.login,
-        builder: (context, state) => const NcLoginPage(),
+        builder: (context, state) => const YcLoginPage(),
       ),
       GoRoute(path: '/profile', redirect: (context, state) => RoutePaths.login),
       GoRoute(
@@ -267,6 +279,7 @@ class const App({super.key}) extends StatefulWidget {
   );
 
   static void openFile(SharedFile file) async {
+    if (!ycAccount.canWrite) return;
     final filePath = file.value;
     if (file.type != SharedMediaType.FILE || filePath == null) return;
     log.info('Opening file: (${file.type}) $filePath');
@@ -335,7 +348,11 @@ class _AppState extends State<App> {
 
   @override
   Widget build(BuildContext context) {
-    return DynamicMaterialApp(title: 'Saber', router: App._router);
+    return DynamicMaterialApp(
+      title: 'YC Note',
+      defaultSwatch: const Color(0xff6366f1),
+      router: App._router,
+    );
   }
 
   @override

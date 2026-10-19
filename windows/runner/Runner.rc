@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.adilhanney" "\0"
-            VALUE "FileDescription", "saber" "\0"
+            VALUE "FileDescription", "YC Note" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "saber" "\0"
             VALUE "LegalCopyright", "Saber  Copyright (C) 2022  Adil Hanney." "\0"
-            VALUE "OriginalFilename", "saber.exe" "\0"
-            VALUE "ProductName", "Saber" "\0"
+            VALUE "OriginalFilename", "yc_note.exe" "\0"
+            VALUE "ProductName", "YC Note" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

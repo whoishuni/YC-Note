@@ -20,7 +20,7 @@ home:
   create:
     newNote: Nueva nota
     importNote: Importar nota
-  welcome: Te damos la bienvenida a Saber
+  welcome: Te damos la bienvenida a YC Note
   invalidFormat: El archivo que seleccionaste no es válido. Por favor, selecciona un archivo .sbn, .sbn2, .sba or .pdf.
   noFiles: No se ha encontrado ninguna nota
   noPreviewAvailable: Vista previa no disponible
@@ -80,7 +80,7 @@ home:
     simpleGrid(OUTDATED): Cuadrícula simple
 sentry:
   consent:
-    title: ¿Quieres mejorar Saber?
+    title: ¿Quieres mejorar YC Note?
     description:
       question: ¿Quieres enviar informes de errores de forma automática? Esto permite identificar y corregir fallos más rápido.
       scope: Los reportes pueden contener información acerca del error y su dispositivo. Me he esforzado por filtrar la información personal, pero es posible que queden restos.
@@ -105,7 +105,7 @@ settings:
     layoutSize: Tipo de disposición
     customAccentColor: Color de acento personalizado
     hyperlegibleFont: Fuente hiperlegible
-    shouldCheckForUpdates: Buscar actualizaciones de Saber automáticamente
+    shouldCheckForUpdates: Buscar actualizaciones de YC Note automáticamente
     shouldAlwaysAlertForUpdates: Actualizaciones más rápidas
     allowInsecureConnections: Permitir conexiones inseguras
     editorToolbarAlignment: Alineación de la barra de herramientas del editor
@@ -124,11 +124,11 @@ settings:
     autosave: Guardado automático
     shapeRecognitionDelay: Retraso en el reconocimiento de formas
     autoStraightenLines: Enderezar líneas automáticamente
-    customDataDir: Carpeta de Saber personalizada
+    customDataDir: Carpeta de YC Note personalizada
     sentry: Informes de errores
   prefDescriptions:
     hyperlegibleFont: Atkinson Hyperlegible aumenta la legibilidad para lectores con poca visión
-    allowInsecureConnections: (No recomendado) Autorizar a Saber a conectarse a servidores con certificados autofirmados o no fiables
+    allowInsecureConnections: (No recomendado) Autorizar a YC Note a conectarse a servidores con certificados autofirmados o no fiables
     preferGreyscale: Para pantallas con tinta electrónica
     autoClearWhiteboardOnExit: Aún se sincronizará con tus otros dispositivos
     disableEraserAfterUse: Volver automáticamente al bolígrafo tras usar la goma
@@ -176,7 +176,7 @@ settings:
     mustBeDoneSyncing(OUTDATED): Asegúrese de que la sincronización esté completa antes de cambiar el directorio
   autosaveDisabled(OUTDATED): Nunca
   shapeRecognitionDisabled(OUTDATED): Nunca
-  openDataDir(OUTDATED): Abrir carpeta Saber
+  openDataDir(OUTDATED): Abrir carpeta YC Note
   resyncEverything(OUTDATED): Resync todo
 logs:
   useTheApp(OUTDATED): Los registros aparecerán aquí mientras usa la aplicación
@@ -197,18 +197,18 @@ login:
     almostDone(OUTDATED): Casi listo para sincronizar, toca para finalizar el inicio de sesión
   ncLoginStep:
     loginFlow:
-      pleaseAuthorize(OUTDATED): Autorice a Saber a acceder a su cuenta de Nextcloud
+      pleaseAuthorize(OUTDATED): Autorice a YC Note a acceder a su cuenta de Nextcloud
       followPrompts(OUTDATED): Siga las indicaciones en su navegador.
       browserDidntOpen(OUTDATED): El navegador no se abrió
     whereToStoreData(OUTDATED): "Elige dónde quieres almacenar tus datos:"
-    saberNcServer(OUTDATED): Servidor Nextcloud de Saber
+    saberNcServer(OUTDATED): Servidor Nextcloud de YC Note
     otherNcServer(OUTDATED): Otro servidor Nextcloud
     serverUrl(OUTDATED): URL del servidor
-    loginWithSaber(OUTDATED): Iniciar sesión con Saber
+    loginWithSaber(OUTDATED): Iniciar sesión con YC Note
     loginWithNextcloud(OUTDATED): Iniciar sesión con Nextcloud
   encLoginStep:
     enterEncPassword(OUTDATED): "Para proteger sus datos, ingrese su contraseña de cifrado:"
-    newToSaber(OUTDATED): Nuevo en Saber
+    newToSaber(OUTDATED): Nuevo en YC Note
     encPassword(OUTDATED): Contraseña de cifrado
     encFaqTitle(OUTDATED): Preguntas frecuentes
     wrongEncPassword(OUTDATED): El descifrado falló con la contraseña proporcionada. Intente ingresarlo nuevamente.
@@ -216,7 +216,7 @@ login:
     encFaq(OUTDATED):
     - q: ¿Qué es la contraseña de cifrado?
       a: |-
-        La contraseña de cifrado se utiliza para cifrar tus datos antes de enviarlos al servidor. La eliges cuando inicias sesión por primera vez en Saber, y no está relacionada con tu cuenta/contraseña de Nextcloud.
+        La contraseña de cifrado se utiliza para cifrar tus datos antes de enviarlos al servidor. La eliges cuando inicias sesión por primera vez en YC Note, y no está relacionada con tu cuenta/contraseña de Nextcloud.
         Nadie puede acceder a tus notas en el servidor sin tu contraseña de cifrado. Esto significa que si olvidas tu contraseña de cifrado, perderás el acceso a tus datos.
     - q: ¿Por qué usar dos contraseñas?
       a: |-
@@ -235,17 +235,17 @@ profile:
   - q: ¿Pierdo mis notas si cierro sesión?
     a: No. Tus notas permanecerán tanto en tu dispositivo como en el servidor. Solo no se sincronizarán con el servidor hasta que vuelvas a iniciar sesión. Asegúrate de que la sincronización se completó antes de cerrar la sesión para asegurarte de que no pierdes nada (puedes ver el progreso en la pantalla de inicio).
   - q: ¿Cómo puedo cambiar mi contraseña de Nextcloud?
-    a: Accede a la web de tu servidor e inicia sesión. Luego, accede a Ajustes > Seguridad > Cambiar contraseña. Necesitarás cerrar la sesión e iniciarla de nuevo en Saber tras cambiar la contraseña.
+    a: Accede a la web de tu servidor e inicia sesión. Luego, accede a Ajustes > Seguridad > Cambiar contraseña. Necesitarás cerrar la sesión e iniciarla de nuevo en YC Note tras cambiar la contraseña.
   - q: ¿Cómo cambio mi contraseña de cifrado?
     a: |-
-      1. Cierra la sesión en Saber. Asegúrate de que la sincronización se completó antes de cerrar la sesión para asegurarte de que no pierdes nada (puedes ver el progreso en la pantalla de inicio).
-      2. Accede a la web de tu servidor y elimina la carpeta 'Saber'. Esto eliminará todas las notas del servidor.
-      3. Inicia sesión de nuevo en Saber. Puedes elegir una nueva contraseña de cifrado al iniciar la sesión.
-      4. No te olvides de cerrar e iniciar la sesión de Saber de nuevo en el resto de tus dispositivos.
+      1. Cierra la sesión en YC Note. Asegúrate de que la sincronización se completó antes de cerrar la sesión para asegurarte de que no pierdes nada (puedes ver el progreso en la pantalla de inicio).
+      2. Accede a la web de tu servidor y elimina la carpeta 'YC Note'. Esto eliminará todas las notas del servidor.
+      3. Inicia sesión de nuevo en YC Note. Puedes elegir una nueva contraseña de cifrado al iniciar la sesión.
+      4. No te olvides de cerrar e iniciar la sesión de YC Note de nuevo en el resto de tus dispositivos.
   - q: ¿Cómo puedo eliminar mi cuenta?
     a: |-
       Pincha en el botón "@:profile.quickLinks.deleteAccount", e inicia sesión si es necesario.
-      Si estás usando el servidor oficial de Saber, tu cuenta se eliminará después de un periodo de una semana. Puedes contactar conmigo en la dirección adilhanney@disroot.org durante este tiempo para cancelar la eliminación.
+      Si estás usando el servidor oficial de YC Note, tu cuenta se eliminará después de un periodo de una semana. Puedes contactar conmigo en la dirección adilhanney@disroot.org durante este tiempo para cancelar la eliminación.
       Si estás usando un servidor de terceros, puede ser que la opción de eliminar no exista: necesitas consultar la política de privacidad del servidor para más información.
   quotaUsage(OUTDATED): Estás usando $used de $total ($percent%)
   connectedTo(OUTDATED): Conectado a
@@ -357,7 +357,7 @@ editor:
     watchingServer(OUTDATED): Actualmente estás buscando actualizaciones en el servidor. La edición está deshabilitada en este modo.
     corrupted(OUTDATED): No se pudo cargar la nota. Es posible que esté dañado o que aún se esté descargando.
   versionTooNew:
-    title: Esta nota fue editada usando una versión más reciente de Saber
+    title: Esta nota fue editada usando una versión más reciente de YC Note
     subtitle: La edición de esta nota puede resultar en la pérdida de cierta información. ¿Quieres ignorar esto y editarlo de todos modos?
     allowEditing: Editar
   quill:

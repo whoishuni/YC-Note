@@ -14,7 +14,7 @@ class FlavorConfig {
   static void setup({
     String flavor = '',
     String appStore = '',
-    bool shouldCheckForUpdatesByDefault = true,
+    bool shouldCheckForUpdatesByDefault = false,
   }) {
     _flavor = flavor;
     _appStore = appStore;
@@ -26,7 +26,7 @@ class FlavorConfig {
     appStore: const String.fromEnvironment('APP_STORE'),
     shouldCheckForUpdatesByDefault: const bool.fromEnvironment(
       'UPDATE_CHECK',
-      defaultValue: true,
+      defaultValue: false,
     ),
   );
 }

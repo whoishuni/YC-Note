@@ -66,3 +66,14 @@ coverage/
 
 # temp files for fdroid pubspec.lock
 /tmpfdroid/
+
+# YC Note private runtime
+/server/config.local.php
+/server/var/
+/server/public/.local-root.php
+*.ipa
+*.p12
+*.mobileprovision
+
+/dist/
+__pycache__/
