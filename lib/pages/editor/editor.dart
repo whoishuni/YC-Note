@@ -48,6 +48,7 @@ import 'package:saber/data/tools/pencil.dart';
 import 'package:saber/data/tools/select.dart';
 import 'package:saber/data/tools/shape_pen.dart';
 import 'package:saber/data/yc_note/account.dart';
+import 'package:saber/data/yc_note/recovery.dart';
 import 'package:saber/i18n/strings.g.dart';
 import 'package:saber/pages/home/whiteboard.dart';
 import 'package:sbn/change.dart';
@@ -164,6 +165,9 @@ class EditorState extends State<Editor> {
   ValueNotifier<SavingState> savingState = ValueNotifier(SavingState.saved);
   Timer? _delayedSaveTimer;
   Timer? _watchServerTimer;
+  Future<void>? _readOnlyRecovery;
+  String? _recoveredReadOnlyPath;
+  var _recoveryFailed = false;
 
   // used to prevent accidentally drawing when pinch zooming
   var lastSeenPointerCount = 0;
@@ -183,7 +187,7 @@ class EditorState extends State<Editor> {
 
   @override
   void initState() {
-    ycAccount.addListener(_setState);
+    ycAccount.addListener(_onAccountChanged);
     DynamicMaterialApp.addFullscreenListener(_setState);
 
     _initAsync();
@@ -263,6 +267,63 @@ class EditorState extends State<Editor> {
   }
 
   void _setState() => setState(() {});
+
+  void _onAccountChanged() {
+    if (ycAccount.isReadOnly && !history.isCurrentStateSaved) {
+      unawaited(_preserveReadOnlyChanges());
+    } else if (ycAccount.canWrite && _recoveredReadOnlyPath != null) {
+      _recoveredReadOnlyPath = null;
+      if (!history.isCurrentStateSaved) autosaveAfterDelay();
+    }
+    _setState();
+  }
+
+  Future<void> _preserveReadOnlyChanges() {
+    if (_readOnlyRecovery != null) return _readOnlyRecovery!;
+    if (_recoveredReadOnlyPath != null || history.isCurrentStateSaved) {
+      return Future.value();
+    }
+    _delayedSaveTimer?.cancel();
+    _renameTimer?.cancel();
+    final future = _writeReadOnlyRecovery();
+    _readOnlyRecovery = future;
+    return future.whenComplete(() => _readOnlyRecovery = null);
+  }
+
+  Future<void> _writeReadOnlyRecovery() async {
+    final root = FileManager.documentsDirectory;
+    try {
+      savingState.value = .saving;
+      final (bson, assets) = coreInfo.saveToBinary(
+        currentPageIndex: currentPageIndex,
+      );
+      final path = await preserveYcNotebook(
+        root: root,
+        sourcePath: '${coreInfo.filePath}${Editor.extension}',
+        notebook: bson,
+        assets: [for (var i = 0; i < assets.length; i++) assets.getBytes(i)],
+      );
+      _recoveredReadOnlyPath = path;
+      _recoveryFailed = false;
+      if (FileManager.documentsDirectory == root) {
+        FileManager.broadcastFileWrite(FileOperationType.write, path);
+      }
+      // The canonical notebook is still dirty. If write access returns, resume
+      // its normal save instead of treating the recovery copy as that save.
+      if (ycAccount.isReadOnly) {
+        savingState.value = .saved;
+      } else if (mounted) {
+        _recoveredReadOnlyPath = null;
+        autosaveAfterDelay();
+      }
+    } catch (e, st) {
+      log.severe('Could not preserve pending notebook changes', e, st);
+      _recoveryFailed = true;
+      savingState.value = .waitingToSave;
+    } finally {
+      if (mounted) _setState();
+    }
+  }
 
   Keybinding? _ctrlZ, _ctrlY, _ctrlShiftZ;
   void _assignKeybindings() {
@@ -914,6 +975,11 @@ class EditorState extends State<Editor> {
   }
 
   Future<void> saveToFile() async {
+    if (coreInfo.readOnly) {
+      if (ycAccount.isReadOnly) await _preserveReadOnlyChanges();
+      return;
+    }
+    await _readOnlyRecovery;
     if (coreInfo.readOnly) return;
 
     switch (savingState.value) {
@@ -959,6 +1025,10 @@ class EditorState extends State<Editor> {
               ),
         FileManager.removeUnusedAssets(filePath, numAssets: assets.length),
       ]);
+      if (ycAccount.isReadOnly) {
+        await _preserveReadOnlyChanges();
+        return;
+      }
       savingState.value = .saved;
       history.markLastChangeAsSaved();
     } catch (e, st) {
@@ -1408,6 +1478,13 @@ class EditorState extends State<Editor> {
 
     final readonlyBanner = ReadOnlyBanner(
       ycAccount.isReadOnly ? .permissionDenied : coreInfo.readOnlyReason,
+      detail: !ycAccount.isReadOnly
+          ? null
+          : _recoveryFailed
+          ? '本機副本未儲存，請重試'
+          : _recoveredReadOnlyPath != null
+          ? '變更已保留於「本機保留」'
+          : null,
       action: coreInfo.readOnlyReason == .versionTooNew
           ? showVersionTooNewDialog
           : null,
@@ -2065,7 +2142,7 @@ class EditorState extends State<Editor> {
 
   @override
   void dispose() {
-    ycAccount.removeListener(_setState);
+    ycAccount.removeListener(_onAccountChanged);
     unawaited(_cleanUpAsync());
 
     DynamicMaterialApp.removeFullscreenListener(_setState);
@@ -2088,6 +2165,7 @@ class EditorState extends State<Editor> {
 
   Future<void> _cleanUpAsync() async {
     try {
+      await _readOnlyRecovery;
       if (_renameTimer?.isActive ?? false) {
         _renameTimer!.cancel();
         await _renameFileNow();
