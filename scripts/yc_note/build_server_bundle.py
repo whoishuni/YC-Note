@@ -27,7 +27,14 @@ with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as archive:
         target='public_html/rent/'+name
         archive.write(path,target);manifest[target]=hashlib.sha256(path.read_bytes()).hexdigest()
     patches=json.loads((ROOT/'scripts/yc_note/rental-patches.json').read_text())
-    patch=''.join(''.join(difflib.unified_diff(edit['before'].splitlines(keepends=True),edit['after'].splitlines(keepends=True),fromfile='a/'+name,tofile='b/'+name)) for name,edits in patches.items() for edit in edits)
+    patch=''
+    for name,edits in patches.items():
+        current=(args.rental_root/name).read_bytes().decode()
+        original=current
+        for edit in reversed(edits):
+            if original.count(edit['after'])!=1:raise RuntimeError('Rental patch context does not match source')
+            original=original.replace(edit['after'],edit['before'],1)
+        patch+=''.join(difflib.unified_diff(original.splitlines(keepends=True),current.splitlines(keepends=True),fromfile='a/'+name,tofile='b/'+name))
     archive.writestr('rental-integration.patch',patch)
     archive.write(ROOT/'scripts/yc_note/rental-patches.json','rental-patches.json')
     archive.writestr('public_html/yc_note/.local-root.example.php',"<?php return '/home/ACCOUNT/yc-note-server';\n")
