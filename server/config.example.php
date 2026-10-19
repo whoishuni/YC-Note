@@ -21,6 +21,7 @@ return [
     'storage_path' => __DIR__ . '/var/blobs', // Never under the web document root.
     'max_file_bytes' => 50 * 1024 * 1024,
     'quota_bytes' => 2 * 1024 * 1024 * 1024, // Includes revision history.
-    'token_lifetime_seconds' => 30 * 86400,
+    'token_lifetime_seconds' => 30 * 86400, // Pending enrollment only.
+    'approved_token_idle_seconds' => 90 * 86400, // Sliding, after identity/device checks.
     'offline_lease_seconds' => 86400,
 ];

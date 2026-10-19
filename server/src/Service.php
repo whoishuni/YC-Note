@@ -13,6 +13,7 @@ final class ApiError extends RuntimeException
 
 final class Service
 {
+    public const INTEGRATION_VERSION = 2;
     public function __construct(public readonly PDO $db, private PDO $identity, public readonly array $config) {}
 
     private function query(string $sql, array $params = []): array
@@ -72,28 +73,22 @@ final class Service
 
     private function identityRow(string $column, string|int $value): ?array
     {
-        if ($column === 'id' && (int) $value < 0) {
-            $row = $this->query('SELECT id,name,password,type,is_banned,first_login FROM note_accounts WHERE id=?', [-(int) $value])[0] ?? null;
-            if ($row) $row['id'] = -(int) $row['id'];
-            return $row;
-        }
+        if ($column === 'id' && (int) $value <= 0) return null;
         $table = $this->config['identity_table'];
         if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/D', $table)) throw new RuntimeException('Invalid identity view name.');
         $q = $this->identity->prepare("SELECT id,name,password,type,is_banned,first_login FROM `$table` WHERE `$column`=? LIMIT 1");
         $q->execute([$value]);
         $row = $q->fetch(PDO::FETCH_ASSOC) ?: null;
-        if (!$row && $column === 'name') {
-            $row = $this->query('SELECT id,name,password,type,is_banned,first_login FROM note_accounts WHERE name=?', [$value])[0] ?? null;
-            if ($row) $row['id'] = -(int) $row['id'];
-        }
         return $row;
     }
 
     private function eligible(?array $user): bool
     {
         return $user !== null && empty($user['is_banned']) && empty($user['first_login'])
-            && in_array($user['type'], (int) $user['id'] < 0 ? ['super_admin', 'user'] : ['super_admin', 'admin', 'manager'], true)
+            && (int) $user['id'] > 0
+            && in_array($user['type'], ['super_admin', 'admin', 'manager'], true)
             && !$this->access((int) $user['id'])['removed']
+            && ($user['type'] === 'super_admin' || $this->access((int) $user['id'])['granted'])
             && !empty(password_get_info((string) $user['password'])['algo']);
     }
 
@@ -127,10 +122,27 @@ final class Service
         return $this->eligible($user) && $user['type'] === 'super_admin';
     }
 
+    /** Called only after the rental application's native session validation. */
+    public function rentalUser(int $id): array
+    {
+        $user = $this->identityRow('id', $id);
+        if (!$this->eligible($user)) throw new ApiError(403, '尚未開放筆記權限。');
+        return ['id'=>(int)$user['id'], 'name'=>$user['name'],
+            'role'=>$user['type']==='super_admin'?'super_admin':'user',
+            'can_write'=>$this->canWrite($user)];
+    }
+
+    private function canWrite(array $user): bool
+    {
+        $access = $this->access((int)$user['id']);
+        return !$access['removed'] && ($access['can_write'] || (!$access['granted'] && $user['type']==='super_admin'));
+    }
+
     public function access(int $id): array
     {
-        $rule = $this->query('SELECT can_write,removed FROM access_rules WHERE user_id=?', [$id])[0] ?? ['can_write'=>1, 'removed'=>0];
-        return ['can_write'=>(bool) $rule['can_write'], 'removed'=>(bool) $rule['removed']];
+        $rule = $this->query('SELECT can_write,removed FROM access_rules WHERE user_id=?', [$id])[0] ?? null;
+        return ['granted'=>$rule!==null && !(bool)$rule['removed'],
+            'can_write'=>(bool)($rule['can_write']??false), 'removed'=>(bool)($rule['removed']??false)];
     }
 
     public function members(int $adminId): array
@@ -146,34 +158,19 @@ final class Service
             $user += $this->access($user['id']);
         }
         unset($user);
-        foreach ($this->query('SELECT id,name,type,is_banned,first_login FROM note_accounts ORDER BY id') as $user) {
-            $user['id'] = -(int) $user['id'];
-            $user['source'] = 'local';
-            $user['role'] = $user['type'];
-            $users[] = $user + $this->access($user['id']);
-        }
         return $users;
     }
 
     public function createAccount(int $adminId, string $name, string $password, string $role = 'user'): int
     {
-        if (!$this->isAdmin($adminId)) throw new ApiError(403, '沒有管理權限。');
-        if (!preg_match('/^[A-Za-z0-9][A-Za-z0-9_.@-]{2,99}$/D', $name) || !in_array($role, ['user','super_admin'], true)) throw new ApiError(422, '帳號格式或角色不正確。');
-        $errors = function_exists('validate_password_strength') ? \validate_password_strength($password, [$name]) : [];
-        if ($errors || strlen($password) < 10 || strlen($password) > 72 || !preg_match('/[a-z]/', $password) || !preg_match('/[A-Z]/', $password) || !preg_match('/[0-9]/', $password) || !preg_match('/[^A-Za-z0-9]/', $password)) throw new ApiError(422, '密碼需為 10–72 字元，包含大小寫字母、數字與符號。');
-        if ($this->identityRow('name', $name)) throw new ApiError(409, '帳號已存在。');
-        try {
-            $this->query('INSERT INTO note_accounts (name,password,type,created_at) VALUES (?,?,?,?)', [$name, password_hash($password, PASSWORD_BCRYPT, ['cost'=>12]), $role, time()]);
-        } catch (\PDOException $e) { if (str_starts_with((string) $e->getCode(), '23')) throw new ApiError(409, '帳號已存在。'); throw $e; }
-        $id = -(int) $this->db->lastInsertId();
-        $this->audit($adminId, 'user.created', ['user_id'=>$id,'role'=>$role]);
-        return $id;
+        throw new ApiError(410, '請由租屋系統建立管理員帳號。');
     }
 
     public function setAccess(int $adminId, int $target, bool $canWrite, bool $removed = false, ?string $role = null): void
     {
         if (!$this->isAdmin($adminId)) throw new ApiError(403, '沒有管理權限。');
         $targetUser = $this->identityRow('id', $target);
+        if (!$targetUser || !in_array($targetUser['type'], ['admin','manager','super_admin'], true)) throw new ApiError(422, '只能授權租屋管理員帳號。');
         if ($role !== null && ($targetUser['type'] ?? null) === $role) $role = null;
         if ($target === $adminId && ($removed || $role !== null)) throw new ApiError(409, '不能刪除或變更自己的管理角色。');
         if (!in_array($role, [null,'user','super_admin'], true) || ($target > 0 && $role !== null)) throw new ApiError(422, '共用帳號的角色由原系統決定。');
@@ -184,7 +181,6 @@ final class Service
             $existing = $this->query('SELECT user_id FROM access_rules WHERE user_id=?', [$target]);
             if ($existing) $this->query('UPDATE access_rules SET can_write=?,removed=?,updated_at=? WHERE user_id=?', [(int)$canWrite,(int)$removed,time(),$target]);
             else $this->query('INSERT INTO access_rules (can_write,removed,updated_at,user_id) VALUES (?,?,?,?)', [(int)$canWrite,(int)$removed,time(),$target]);
-            if ($role !== null) $this->query('UPDATE note_accounts SET type=? WHERE id=?', [$role,-$target]);
             if ($removed || $role !== null) $this->query('DELETE FROM tokens WHERE user_id=?', [$target]);
             $this->audit($adminId, $removed ? 'user.removed' : 'user.permissions', ['user_id'=>$target,'can_write'=>$canWrite,'role'=>$role]);
             $this->db->commit();
@@ -230,18 +226,60 @@ final class Service
         if ($approved && $row['status'] !== 'approved') throw new ApiError(403, '請先由管理者核准這台裝置。');
         $row['username'] = $user['name'];
         $row['yc_role'] = $user['type'] === 'super_admin' ? 'super_admin' : 'user';
-        $row['can_write'] = $this->access((int)$row['user_id'])['can_write'];
+        $row['can_write'] = $this->canWrite($user);
         return $row;
     }
 
     public function session(string $token): array
     {
         $a = $this->authenticate($token, false);
+        $this->db->beginTransaction();
+        try {
+        $this->lockOwner((int)$a['user_id']);
+        $a = $this->authenticate($token, false);
+        // An approved installation keeps its approval. Only active, unexpired
+        // credentials renew; revocation and rental identity checks still apply.
+        if ($a['status'] === 'approved') {
+            $lifetime = max(86400, min(180*86400, (int)($this->config['approved_token_idle_seconds'] ?? 90*86400)));
+            $expiry = time() + $lifetime;
+            $this->query('UPDATE tokens SET expires_at=? WHERE token_hash=? AND expires_at>?', [$expiry, hash('sha256',$token), time()]);
+            $a['expires_at'] = $expiry;
+        }
         $this->query('UPDATE devices SET last_seen_at=? WHERE id=?', [time(), $a['device_id']]);
+        $this->db->commit();
+        } catch (Throwable $e) { $this->db->rollBack(); throw $e; }
         return ['user_id' => (int) $a['user_id'], 'username' => $a['username'], 'yc_role' => $a['yc_role'], 'can_write'=>$a['can_write'], 'device_id' => $a['device_id'], 'status' => $a['status'], 'expires_at' => (int) $a['expires_at'], 'offline_lease_seconds' => (int) $this->config['offline_lease_seconds']];
     }
 
     public function logout(string $token): void { $this->query('DELETE FROM tokens WHERE token_hash=?', [hash('sha256', $token)]); }
+
+    public function revokeOwnDevice(int $uid, string $id): void
+    {
+        $this->rentalUser($uid);
+        $this->db->beginTransaction();
+        try {
+            $this->lockOwner($uid);
+            $device = $this->query('SELECT user_id FROM devices WHERE id=? AND user_id=?', [$id,$uid]);
+            if (!$device) throw new ApiError(404, '找不到裝置。');
+            $this->query("UPDATE devices SET status='revoked' WHERE id=? AND user_id=?", [$id,$uid]);
+            $this->query('DELETE FROM tokens WHERE device_id=?', [$id]);
+            $this->audit($uid,'device.revoked',['device_id'=>$id,'user_id'=>$uid]);
+            $this->db->commit();
+        } catch (Throwable $e) { $this->db->rollBack(); throw $e; }
+    }
+
+    public function maintenanceAllowed(string $role, string $ip): bool
+    {
+        return \MaintenanceMode::apiAllowed($this->identity,$role,$ip);
+    }
+
+    public function storageUsage(int $uid): array
+    {
+        $this->rentalUser($uid);
+        $head=$this->query('SELECT COUNT(*) AS files,COALESCE(SUM(size),0) AS bytes FROM files WHERE user_id=? AND deleted=0',[$uid])[0];
+        $versions=$this->query('SELECT COUNT(*) AS versions,COALESCE(SUM(size),0) AS bytes FROM revisions WHERE user_id=?',[$uid])[0];
+        return ['files'=>(int)$head['files'],'bytes'=>(int)$head['bytes'],'versions'=>(int)$versions['versions'],'retained_bytes'=>(int)$versions['bytes'],'quota_bytes'=>(int)$this->config['quota_bytes']];
+    }
 
     public function setDeviceStatus(int $adminId, string $id, string $status): void
     {
@@ -252,6 +290,7 @@ final class Service
             $device = $this->query('SELECT * FROM devices WHERE id=?', [$id])[0] ?? null;
             if (!$device) throw new ApiError(404, '找不到裝置。');
             $this->lockOwner((int) $device['user_id']);
+            if ($status === 'approved') $this->rentalUser((int)$device['user_id']);
             $this->query('UPDATE devices SET status=? WHERE id=?', [$status, $id]);
             if ($status === 'revoked') $this->query('DELETE FROM tokens WHERE device_id=?', [$id]);
             $this->audit($adminId, 'device.' . $status, ['device_id' => $id, 'user_id' => (int) $device['user_id']]);
@@ -289,13 +328,15 @@ final class Service
         self::validPath($path);
         if ($baseRevision < 0) throw new ApiError(422, '無效的版本。');
         if ($bytes !== null && strlen($bytes) > $this->config['max_file_bytes']) throw new ApiError(413, '單一檔案超過大小上限。');
-        if (!$this->access((int)$actor['user_id'])['can_write']) throw new ApiError(403, '目前為唯讀模式。');
+        $user = $this->webUser((int)$actor['user_id'], $actor['identity_hash']??'');
+        if (!$this->canWrite($user)) throw new ApiError(403, '目前為唯讀模式。');
         if ($bytes !== null && class_exists(SecurityBridge::class)) SecurityBridge::scan($bytes, $path);
         $uid = (int) $actor['user_id'];
         $this->db->beginTransaction();
         try {
             $this->lockOwner($uid);
-            if (!$this->access($uid)['can_write'] || $this->access($uid)['removed']) throw new ApiError(403, '目前為唯讀模式。');
+            $user = $this->webUser($uid, $actor['identity_hash']??'');
+            if (!$this->canWrite($user)) throw new ApiError(403, '目前為唯讀模式。');
             // Recheck authorization after taking the same lock as revocation.
             $d = $this->query('SELECT status FROM devices WHERE id=? AND user_id=?', [$actor['device_id'], $uid])[0] ?? null;
             if (!$d || $d['status'] !== 'approved') throw new ApiError(403, '裝置未通過認證。');

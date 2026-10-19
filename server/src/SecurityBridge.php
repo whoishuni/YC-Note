@@ -10,9 +10,17 @@ final class SecurityBridge
     {
         $path = $config['rental_includes_path'] ?? dirname(__DIR__) . '/security/rental';
         if (!empty($config['rental_bootstrap_path'])) require_once $config['rental_bootstrap_path'];
-        foreach (['DictionaryDetector.php','SecurityPipeline.php','HttpSecurityPolicy.php','security.php','csrf.php','GeoBlocker.php','UploadSecurityScanner.php'] as $file) {
+        foreach (['DictionaryDetector.php','SecurityPipeline.php','HttpSecurityPolicy.php','security.php','csrf.php','GeoBlocker.php','UploadSecurityScanner.php','MaintenanceMode.php'] as $file) {
             if (!is_file($path . '/' . $file)) throw new \RuntimeException('Shared security module is unavailable.');
             require_once $path . '/' . $file;
+        }
+    }
+
+    public static function maintenance(Service $service, string $role = ''): void
+    {
+        if (!$service->maintenanceAllowed($role, \get_client_ip())) {
+            header('Retry-After: 300');
+            throw new ApiError(503,'系統維護中，請稍後再試。');
         }
     }
 
@@ -31,6 +39,7 @@ final class SecurityBridge
 
     public static function check(Service $service, array $metadata = []): void
     {
+        if (function_exists('feature_enabled') && !\feature_enabled('yc_note')) throw new ApiError(503,'筆記功能暫停開放。');
         $ip = \get_client_ip();
         if ($service->ipBlocked($ip)) throw new ApiError(403, '存取被拒絕。');
         \GeoBlocker::check();

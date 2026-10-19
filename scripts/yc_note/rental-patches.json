@@ -1,0 +1,26 @@
+{
+  "config/features.php": [
+    {
+      "before": "    'behavior_tracking' => false,\n    'system_monitor' => config_env_bool('FEATURE_SYSTEM_MONITOR_ENABLED', true),\n    'pwa' => false,\n    'storage_manager' => config_env_bool('FEATURE_STORAGE_MANAGER_ENABLED', false),\n    // Keep disabled until external private storage, ClamAV and the recurring\n    // upload worker all pass the production readiness check.\n",
+      "after": "    'behavior_tracking' => false,\n    'system_monitor' => config_env_bool('FEATURE_SYSTEM_MONITOR_ENABLED', true),\n    'pwa' => false,\n    'yc_note' => config_env_bool('FEATURE_YC_NOTE_ENABLED', true),\n    'storage_manager' => config_env_bool('FEATURE_STORAGE_MANAGER_ENABLED', false),\n    // Keep disabled until external private storage, ClamAV and the recurring\n    // upload worker all pass the production readiness check.\n"
+    }
+  ],
+  "includes/admin_header.php": [
+    {
+      "before": "                        <span>使用者管理</span>\r\n                    </a>\r\n                </li>\r\n                <?php if (feature_enabled('cloud_drive')): ?>\r\n                    <li>\r\n                        <a href=\"<?php echo $adminPath; ?>cloud_drive.php\" class=\"<?php echo CURRENT_PAGE === 'cloud_drive.php' ? 'active' : ''; ?>\">\r\n",
+      "after": "                        <span>使用者管理</span>\r\n                    </a>\r\n                </li>\r\n                <?php require_once __DIR__ . '/YcNoteModule.php'; ?>\n                <?php if (YcNoteModule::visible()): ?>\n                <li><a href=\"<?php echo $adminPath; ?>notes.php\" class=\"<?php echo CURRENT_PAGE === 'notes.php' ? 'active' : ''; ?>\">\n                    <svg class=\"nav-icon\" viewBox=\"0 0 24 24\"><path d=\"M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm2 5v2h10V7H7zm0 4v2h10v-2H7zm0 4v2h7v-2H7z\"/></svg>\n                    <span>YC Note</span>\n                </a></li>\n                <?php endif; ?>\n                <?php if (feature_enabled('cloud_drive')): ?>\r\n                    <li>\r\n                        <a href=\"<?php echo $adminPath; ?>cloud_drive.php\" class=\"<?php echo CURRENT_PAGE === 'cloud_drive.php' ? 'active' : ''; ?>\">\r\n"
+    }
+  ],
+  "includes/MaintenanceMode.php": [
+    {
+      "before": "{\n    private const SETTING_PREFIX = 'maintenance_';\n    private static $requestStatus = null;\n\n    public static function getStatus($conn, $refresh = false)\n    {\n",
+      "after": "{\n    private const SETTING_PREFIX = 'maintenance_';\n    private static $requestStatus = null;\n\n    /** Same maintenance decision for the Session-free YC Note bearer API. */\n    public static function apiAllowed(PDO $identity, string $role, string $ip): bool\n    {\n        if ($role === 'super_admin') return true;\n        $rows=$identity->query(\"SELECT setting_key,setting_value FROM system_settings WHERE setting_key LIKE 'maintenance_%'\")->fetchAll(PDO::FETCH_ASSOC);\n        $status=self::defaultStatus();\n        foreach ($rows as $row) {\n            $key=substr((string)$row['setting_key'],strlen(self::SETTING_PREFIX));\n            if (array_key_exists($key,$status)) $status[$key]=(string)$row['setting_value'];\n        }\n        $status=self::normalize($status);\n        return !$status['active'] || in_array($ip,self::normalizeAllowedIps($status['allowed_ips']),true);\n    }\n\n    public static function getStatus($conn, $refresh = false)\n    {\n"
+    }
+  ],
+  ".htaccess": [
+    {
+      "before": "# ========== 9. 限制 HTTP 方法（僅允許 GET/POST） ==========\n<IfModule mod_rewrite.c>\n    RewriteCond %{REQUEST_METHOD} !^(GET|POST|HEAD)$ [NC]\n    RewriteRule .* - [F,L]\n</IfModule>\n\n",
+      "after": "# ========== 9. 限制 HTTP 方法（僅允許 GET/POST） ==========\n<IfModule mod_rewrite.c>\n    RewriteCond %{REQUEST_METHOD} !^(GET|POST|HEAD)$ [NC]\n    # YC Note validates its bearer-only PUT/DELETE operations in the API.\n    RewriteCond %{REQUEST_URI} !^/rent/yc_note/api\\.php$ [NC]\n    RewriteRule .* - [F,L]\n</IfModule>\n\n"
+    }
+  ]
+}

@@ -3,7 +3,9 @@
   "database": "u805049489_ycnote",
   "tables": 9,
   "super_admin_count": 1,
-  "base_url": "https://yckuo.com/yc_note/",
+  "base_url": "https://yckuo.com/rent/admin/notes.php",
+  "legacy_url": "https://yckuo.com/yc_note/",
+  "rental_files": 9,
   "private_root": "/home/u805049489/yc-note",
   "public_root": "/home/u805049489/domains/yckuo.com/public_html/yc_note",
   "installer_removed": true

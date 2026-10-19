@@ -14,6 +14,7 @@ data=json.loads(input())
 private=Path.home()/'.config/yc-note'
 private.mkdir(mode=0o700,parents=True,exist_ok=True)
 credential_file=private/'deploy.json'
+if 'db_password' not in data: data['db_password']=json.loads(credential_file.read_text())['db_password']
 fd=os.open(credential_file,os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o600)
 with os.fdopen(fd,'w') as handle: json.dump({'db_password':data['db_password'],'database':'u805049489_ycnote','username':'u805049489','domain':'yckuo.com'},handle)
 token=secrets.token_hex(32)
@@ -31,7 +32,15 @@ try:
     status,_=send(target,'PATCH',source,{**auth,'Content-Type':'application/offset+octet-stream'})
     if status!=204: raise RuntimeError('Unexpected upload status '+str(status))
     paths=['src/bootstrap.php','src/Service.php','src/SecurityBridge.php','public/index.php','public/api.php','public/boot.php','public/style.css','public/icon.svg','public/.htaccess']
-    payload={'db_password':data['db_password'],'files':{p:base64.b64encode((ROOT/'server'/p).read_bytes()).decode() for p in paths}}
+    rental=Path(data['rental_root']).resolve()
+    native=['admin/notes.php','includes/YcNoteModule.php','includes/yc_note_view.php','assets/css/yc-note.css','yc_note/api.php']
+    patches=json.loads((ROOT/'scripts/yc_note/rental-patches.json').read_text())
+    for name,edits in patches.items():
+        source=(rental/name).read_bytes()
+        for edit in edits:
+            if edit['after'].encode() not in source:raise RuntimeError('Rental source does not match integration patch')
+    patches={name:[{k:base64.b64encode(v.encode()).decode() for k,v in edit.items()} for edit in edits] for name,edits in patches.items()}
+    payload={'db_password':data['db_password'],'files':{p:base64.b64encode((ROOT/'server'/p).read_bytes()).decode() for p in paths},'rental_files':{p:base64.b64encode((rental/p).read_bytes()).decode() for p in native},'rental_patches':patches}
     status,body=send(installer,'POST',json.dumps(payload).encode(),{'Content-Type':'application/json','X-YC-Install':token})
     result=json.loads(body)
     if not result.get('installed'): raise RuntimeError('Installation did not complete')

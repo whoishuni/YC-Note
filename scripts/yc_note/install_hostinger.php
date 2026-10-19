@@ -5,6 +5,7 @@ declare(strict_types=1);
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
 if (($_SERVER['REQUEST_METHOD']??'')!=='POST' || !hash_equals('__INSTALL_TOKEN_HASH__',hash('sha256',(string)($_SERVER['HTTP_X_YC_INSTALL']??'')))) { http_response_code(404); exit; }
+$published=[]; $publicPublished=[]; $previousActive=null;
 try {
     if (($_SERVER['HTTPS']??'')!=='on') throw new RuntimeException('https_required');
     $body=file_get_contents('php://input',false,null,0,2*1024*1024+1);
@@ -29,6 +30,44 @@ try {
         if (!is_dir(dirname($target))) mkdir(dirname($target),0700,true);
         if (file_put_contents($target,$bytes,LOCK_EX)!==strlen($bytes)) throw new RuntimeException('source_write');
         chmod($target,0600);
+    }
+    // Patch only anchored additions, keeping unrelated live rental changes.
+    $nativeRoot=$docroot.'/rent';
+    $nativeAllowed=['admin/notes.php','includes/YcNoteModule.php','includes/yc_note_view.php','assets/css/yc-note.css','yc_note/api.php'];
+    $patchAllowed=['config/features.php','includes/admin_header.php','includes/MaintenanceMode.php','.htaccess'];
+    $pending=[];
+    foreach ($nativeAllowed as $name) {
+        $bytes=base64_decode($data['rental_files'][$name]??'',true);
+        if ($bytes===false || $bytes==='') throw new RuntimeException('native_source_missing');
+        $pending[$name]=$bytes;
+    }
+    foreach ($patchAllowed as $name) {
+        $bytes=file_get_contents($nativeRoot.'/'.$name);
+        if ($bytes===false || empty($data['rental_patches'][$name])) throw new RuntimeException('native_patch_missing');
+        foreach ($data['rental_patches'][$name] as $patch) {
+            $before=base64_decode($patch['before']??'',true); $after=base64_decode($patch['after']??'',true);
+            if (!$before || !$after) throw new RuntimeException('native_patch_invalid');
+            if (str_contains($bytes,$after)) continue;
+            if (substr_count($bytes,$before)!==1) throw new RuntimeException('native_patch_conflict');
+            $bytes=str_replace($before,$after,$bytes);
+        }
+        $pending[$name]=$bytes;
+    }
+    $backup=$release.'/rental-backup';
+    mkdir($backup,0700,true);
+    foreach ($pending as $name=>$bytes) {
+        $old=$nativeRoot.'/'.$name;
+        if (is_file($old)) {
+            if (in_array($name,$nativeAllowed,true) && !is_file($root.'/rental-installed.json')) throw new RuntimeException('native_destination_exists');
+            if (in_array($name,$nativeAllowed,true)) {
+                $prior=json_decode(file_get_contents($root.'/rental-installed.json'),true,flags:JSON_THROW_ON_ERROR);
+                $hash=hash_file('sha256',$old);
+                if ($hash!==($prior[$name]??'') && $hash!==hash('sha256',$bytes)) throw new RuntimeException('native_destination_modified');
+            }
+            if (!is_dir(dirname($backup.'/'.$name))) mkdir(dirname($backup.'/'.$name),0700,true);
+            if (!copy($old,$backup.'/'.$name)) throw new RuntimeException('native_backup');
+            chmod($backup.'/'.$name,0600);
+        }
     }
     $rent=require $docroot.'/rent/config/database.php';
     $identityConfig=['dsn'=>'mysql:host='.$rent['host'].';port='.(int)($rent['port']??3306).';dbname='.$rent['database'].';charset=utf8mb4','user'=>$rent['username'],'password'=>$rent['password']];
@@ -64,21 +103,49 @@ try {
     $sharedCount=(int)$identity->query("SELECT COUNT(*) FROM yc_note_identity WHERE type='super_admin' AND COALESCE(is_banned,0)=0 AND COALESCE(first_login,0)=0")->fetchColumn();
     if ($sharedCount<1) throw new RuntimeException('no_active_super_admin');
     if (!is_dir($root.'/blobs')) mkdir($root.'/blobs',0700,true);
+    $previousActive=is_file($root.'/active-release')?file_get_contents($root.'/active-release'):null;
+    foreach ($pending as $name=>$bytes) {
+        $target=$nativeRoot.'/'.$name;
+        if (!is_dir(dirname($target))) mkdir(dirname($target),0755,true);
+        $temp=tempnam(dirname($target),'.yc-note-');
+        if (!$temp || file_put_contents($temp,$bytes,LOCK_EX)!==strlen($bytes) || !chmod($temp,0644) || !rename($temp,$target)) throw new RuntimeException('native_publish');
+        $published[]=$name;
+    }
+    file_put_contents($root.'/rental-installed.json',json_encode(array_map(static fn($b)=>hash('sha256',$b),$pending),JSON_THROW_ON_ERROR),LOCK_EX);
+    chmod($root.'/rental-installed.json',0600);
     file_put_contents($root.'/active-release',$release,LOCK_EX);
     if (!is_dir($public)) mkdir($public,0755,true);
     foreach ($allowed as $relative) {
         if (!str_starts_with($relative,'public/')) continue;
         $name=substr($relative,7);
+        $old=$public.'/'.$name;
+        if (is_file($old)) {
+            if (!is_dir($release.'/public-backup')) mkdir($release.'/public-backup',0700,true);
+            copy($old,$release.'/public-backup/'.$name);chmod($release.'/public-backup/'.$name,0600);
+        }
         $temp=$public.'/.deploy-'.bin2hex(random_bytes(6));
         if (!copy($release.'/'.$relative,$temp)) throw new RuntimeException('public_copy');
         chmod($temp,0644);
         if (!rename($temp,$public.'/'.$name)) throw new RuntimeException('public_activate');
+        $publicPublished[]=$name;
     }
     file_put_contents($public.'/.local-root.php',"<?php return ".var_export($release,true).";\n",LOCK_EX);
     chmod($public.'/.local-root.php',0600);
     $removed=unlink(__FILE__);
-    echo json_encode(['installed'=>true,'database'=>'u805049489_ycnote','tables'=>$tableCount,'super_admin_count'=>$sharedCount,'base_url'=>'https://yckuo.com/yc_note/','private_root'=>$root,'public_root'=>$public,'installer_removed'=>$removed],JSON_THROW_ON_ERROR);
-} catch (Throwable $e) {
+    echo json_encode(['installed'=>true,'database'=>'u805049489_ycnote','tables'=>$tableCount,'super_admin_count'=>$sharedCount,'base_url'=>'https://yckuo.com/rent/admin/notes.php','legacy_url'=>'https://yckuo.com/yc_note/','rental_files'=>count($pending),'private_root'=>$root,'public_root'=>$public,'installer_removed'=>$removed],JSON_THROW_ON_ERROR);
+ } catch (Throwable $e) {
+    // Undo only files this installer published, from the private release backup.
+    foreach (array_reverse($publicPublished) as $name) {
+        $saved=$release.'/public-backup/'.$name;
+        if (is_file($saved)) {copy($saved,$public.'/'.$name);chmod($public.'/'.$name,0644);}
+        else @unlink($public.'/'.$name);
+    }
+    foreach (array_reverse($published) as $name) {
+        $saved=$backup.'/'.$name;
+        if (is_file($saved)) {copy($saved,$nativeRoot.'/'.$name);chmod($nativeRoot.'/'.$name,0644);}
+        else @unlink($nativeRoot.'/'.$name);
+    }
+    if ($previousActive!==null) file_put_contents($root.'/active-release',$previousActive,LOCK_EX);
     error_log('[YC Note installer] type='.get_class($e).' code='.(int)$e->getCode().' stage='.$e->getMessage());
     http_response_code(500);
     echo json_encode(['error'=>'installation_failed','type'=>get_class($e),'code'=>(int)$e->getCode(),'reason'=>$e instanceof Error?substr($e->getMessage(),0,200):null],JSON_THROW_ON_ERROR);

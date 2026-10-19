@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require dirname(__DIR__) . '/src/Service.php';
+require dirname(__DIR__) . '/security/rental/MaintenanceMode.php';
 use YcNote\Service;
 use YcNote\ApiError;
 
@@ -10,6 +11,7 @@ $dsn = getenv('YC_TEST_DSN') ?: 'sqlite:' . $directory . '/test.sqlite';
 if (!str_starts_with($dsn, 'sqlite:') && !str_contains($dsn, 'dbname=yc_note_test;')) throw new RuntimeException('Only the isolated yc_note_test database may be used.');
 $db = new PDO($dsn, getenv('YC_TEST_DB_USER') ?: null, getenv('YC_TEST_DB_PASSWORD') ?: null, [PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC, PDO::ATTR_EMULATE_PREPARES=>false]);
 $db->exec('CREATE TABLE users (id BIGINT PRIMARY KEY, name VARCHAR(100) UNIQUE NOT NULL, password VARCHAR(255) NOT NULL, type VARCHAR(30) NOT NULL, is_banned INTEGER NOT NULL DEFAULT 0, first_login INTEGER NOT NULL DEFAULT 0)');
+$db->exec('CREATE TABLE system_settings (setting_key VARCHAR(100) PRIMARY KEY, setting_value TEXT)');
 $password = 'Fixture-Only-Password-2026!';
 $hash = password_hash($password, PASSWORD_BCRYPT, ['cost'=>4]);
 $insert = $db->prepare('INSERT INTO users (id,name,password,type,is_banned,first_login) VALUES (?,?,?,?,?,?)');
@@ -21,6 +23,12 @@ $checks = 0;
 function check(bool $value, string $label): void { global $checks; if (!$value) throw new RuntimeException('FAIL: ' . $label); $checks++; }
 function fails(int $status, callable $operation, string $label): void { try { $operation(); } catch (ApiError $e) { check($e->status === $status, $label . ' status ' . $e->status); return; } throw new RuntimeException('FAIL: expected rejection: ' . $label); }
 $install = str_repeat('a',64);
+fails(401,fn()=>$service->enroll('writer',$password,$install,'iPad','ios'),'ungranted admin denied');
+fails(403,fn()=>$service->rentalUser(2),'ungranted admin module hidden');
+fails(422,fn()=>$service->setAccess(1,6,true),'tenant cannot be granted notes');
+$service->setAccess(1,2,true);
+$service->setAccess(1,7,true);
+check($service->rentalUser(2)['can_write']===true,'explicit grant opens module');
 fails(401, fn()=>$service->enroll('owner','wrong',$install,'iPad','ios'), 'bad password');
 foreach (['banned','setup','legacy','tenant',"owner' OR 1=1 --",'missing'] as $name) fails(401, fn()=>$service->enroll($name,$password,$install,'iPad','ios'), $name . ' denied');
 fails(422, fn()=>$service->enroll('owner',$password,'bad','iPad','ios'), 'bad installation');
@@ -96,27 +104,43 @@ fails(403,fn()=>$service->write($writerActor,'/writer.sbn2',1,null),'read-only u
 fails(403,fn()=>$service->setAccess(2,1,true),'users cannot grant permissions');
 $service->setAccess(1,2,true);
 check($service->session($other['token'])['can_write']===true,'edit permission can be restored');
-fails(422,fn()=>$service->createAccount(1,'newuser','weak'),'weak local password denied');
-fails(409,fn()=>$service->createAccount(1,'owner',$password),'shared/local name collision denied');
-fails(403,fn()=>$service->createAccount(2,'notallowed',$password),'regular user cannot create account');
-$localId=$service->createAccount(1,'note_only',$password);
-check($localId<0,'local identities cannot collide with shared IDs');
-$local=$service->enroll('note_only',$password,str_repeat('f',64),'Note-only iPad','ios');
-check($local['yc_role']==='user'&&$local['status']==='pending','local account requires device approval');
-$service->setDeviceStatus(1,$local['device_id'],'approved');
-check($service->authenticate($local['token'])['user_id']==$localId,'local login works');
-check($service->manifest($localId)===[],'local account cannot see shared account notes');
-$service->setAccess(1,$localId,false);
-check($service->session($local['token'])['can_write']===false,'local account supports read-only');
-$service->setAccess(1,$localId,false,true);
-fails(401,fn()=>$service->authenticate($local['token']),'removed account loses current tokens');
-fails(401,fn()=>$service->enroll('note_only',$password,str_repeat('f',64),'Note-only iPad','ios'),'removed account cannot log in');
-$service->setAccess(1,$localId,false);
-$local=$service->enroll('note_only',$password,str_repeat('f',64),'Note-only iPad','ios');
-check($local['can_write']===false,'restored account remains read-only');
+fails(410,fn()=>$service->createAccount(1,'newuser',$password),'note-only account creation retired');
+$q=$db->prepare("INSERT INTO note_accounts (name,password,type,created_at) VALUES (?,?,'user',?)"); $q->execute(['note_only',$hash,time()]);
+fails(401,fn()=>$service->enroll('note_only',$password,str_repeat('f',64),'Old iPad','ios'),'legacy note-only login disabled');
+fails(422,fn()=>$service->setAccess(1,-1,true),'legacy account cannot be regranted');
+check((int)$db->query('SELECT COUNT(*) FROM note_accounts')->fetchColumn()===1,'legacy account data preserved');
+$service->setAccess(1,2,false,true);
+fails(401,fn()=>$service->authenticate($other['token']),'removed access invalidates issued token');
+fails(403,fn()=>$service->rentalUser(2),'removed access hides native module');
+$service->setAccess(1,2,false);
+$restored=$service->enroll('writer',$password,str_repeat('b',64),'Writer iPad','ios');
+check($restored['can_write']===false && $restored['status']==='approved','restored read-only access keeps prior device approval');
+check(file_get_contents($service->download(2,'/writer.sbn2')['file'])==='writer note','removed access preserves notebook');
 fails(409,fn()=>$service->setAccess(1,1,false,true),'cannot remove own administrator');
-check(count($service->members(1))===7,'member directory excludes tenant and includes local account');
-check((int)$db->query('SELECT COUNT(*) FROM users')->fetchColumn()===7,'account CRUD never changes shared users');
+check(count($service->members(1))===6,'only rental staff in member directory');
+check((int)$db->query('SELECT COUNT(*) FROM users')->fetchColumn()===7,'note controls never change rental accounts');
+$db->exec("INSERT INTO system_settings VALUES ('maintenance_enabled','1')");
+check(!$service->maintenanceAllowed('user','192.0.2.1'),'shared maintenance blocks regular API');
+check($service->maintenanceAllowed('super_admin','192.0.2.1'),'shared maintenance allows root');
+$db->exec("INSERT INTO system_settings VALUES ('maintenance_allowed_ips','192.0.2.1')");
+check($service->maintenanceAllowed('user','192.0.2.1'),'shared maintenance IP exception');
+$db->exec("INSERT INTO system_settings VALUES ('maintenance_ends_at','2000-01-01 00:00:00')");
+check($service->maintenanceAllowed('user','192.0.2.2'),'expired shared maintenance opens API');
+$db->exec('DELETE FROM system_settings');
+// Active approved sessions renew, while pending and expired credentials cannot.
+$q=$db->prepare('UPDATE tokens SET expires_at=? WHERE token_hash=?');
+$q->execute([time()+30,hash('sha256',$restored['token'])]);
+$renewed=$service->session($restored['token']);
+check($renewed['expires_at']>time()+89*86400,'approved session renews without password or reapproval');
+$q->execute([time()-1,hash('sha256',$restored['token'])]);
+fails(401,fn()=>$service->session($restored['token']),'expired credential cannot renew itself');
+$pending=$service->enroll('writer',$password,str_repeat('e',64),'Pending iPad','ios');
+$q->execute([time()+40,hash('sha256',$pending['token'])]);
+check($service->session($pending['token'])['expires_at']<time()+50,'pending approval has no perpetual renewal');
+fails(404,fn()=>$service->revokeOwnDevice(2,$fresh['device_id']),'owner cannot revoke another account device');
+$service->revokeOwnDevice(2,$pending['device_id']);
+fails(401,fn()=>$service->session($pending['token']),'owner can revoke own device');
+check($service->storageUsage(2)['files']===1,'storage counts only own files');
 echo "PASS: $checks backend integration checks\n";
 
 // Optional fixture for the HTTP/browser tests. Never connects to rental data.

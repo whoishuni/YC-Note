@@ -30,5 +30,9 @@
   "UploadSecurityScanner.php": {
     "source": "Rental-management-system/includes/UploadSecurityScanner.php",
     "sha256": "b8333815bf247865a25cab645443dc98e981b1048cfca2dbcf86fb974b6ddc6e"
+  },
+  "MaintenanceMode.php": {
+    "source": "Rental-management-system/includes/MaintenanceMode.php",
+    "sha256": "40df3870d4d040ca9096c730cc4fc8669acba214608c05cd9dcf2e58473595b0"
   }
 }

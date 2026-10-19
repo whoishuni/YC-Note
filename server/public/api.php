@@ -31,6 +31,7 @@ try {
         return $v;
     };
     if ($action === 'login') {
+        YcNote\SecurityBridge::maintenance($service);
         $service->rateLimit('login-ip|' . ($_SERVER['REMOTE_ADDR'] ?? ''), 30);
         $data = $readJson();
         YcNote\SecurityBridge::check($service, $data);
@@ -41,6 +42,7 @@ try {
         $authorization = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
         $token = str_starts_with($authorization, 'Bearer ') ? substr($authorization, 7) : '';
         $actor = $service->authenticate($token, !in_array($action, ['session','logout'], true));
+        if ($action !== 'logout') YcNote\SecurityBridge::maintenance($service,$actor['yc_role']);
         if (in_array($action,['upload','delete','restore'],true) && !$actor['can_write']) throw new YcNote\ApiError(403,'目前為唯讀模式。');
         $service->rateLimit('api|' . $actor['device_id'], 300, 60);
         $uid = (int) $actor['user_id'];

@@ -4,12 +4,12 @@ YC Note 是由 [Saber](https://github.com/saber-notes/saber) fork 的 Flutter/Da
 
 ![YC Note](assets/icon/resized/icon-128x128.png)
 
-網站：[yckuo.com/yc_note](https://yckuo.com/yc_note/)
+管理：[租屋系統 YC Note](https://yckuo.com/rent/admin/notes.php)（舊 `/yc_note/` 會轉入）
 
-- 共用租屋系統的管理員名單，角色依 YC Note 規則映射。
-- 筆記專用帳號、裝置核准、使用者與唯讀權限管理。
+- 深度整合租屋系統的登入、導覽與管理流程，只使用租屋管理員帳號。
+- 超級管理員管理授權，一般管理員須開放筆記權限；首次裝置核准、後續自動續期。
 - 私有筆記儲存、歷史版本、檔案同步與衝突備份。
-- 獨立資料庫與管理介面，共享原租屋資安引擎。
+- 原生管理頁、共用資安與維護模式，私有資料庫與檔案儲存。
 
 建置需 Flutter 3.47.7 / Dart 3.13.5；iOS 編譯與簽署另需 Xcode。Dart 內部 package 名稱保留 `saber`，筆記格式保留 `.sbn2/.sba`。
 
