@@ -175,7 +175,7 @@ void main() {
       shouldWatchRootDirectory: false,
     );
     await control(
-      "foreach(['files','revisions','sync_staging','sync_commits','owners'] as \$t) \$s->db->exec('DELETE FROM '.\$t); \$s->db->exec('DELETE FROM access_rules WHERE user_id=1');",
+      "foreach(['files','revisions','notebook_versions','sync_staging','sync_commits','owners'] as \$t) \$s->db->exec('DELETE FROM '.\$t); \$s->db->exec('DELETE FROM access_rules WHERE user_id=1');",
     );
     session();
     intercept = null;
@@ -302,7 +302,7 @@ void main() {
       expect(await contents('/note.sbn2.0'), 'remote asset');
       expect(await contents('/note.sbn2.1'), 'remote-only asset');
       expect(File('${root.path}/note.sbn2.2').existsSync(), false);
-      final copies = Directory('${root.path}/.yc-conflicts')
+      final copies = Directory('${root.path}/同步衝突備份')
           .listSync(recursive: true)
           .whereType<File>()
           .where((f) => f.path.endsWith('/note.sbn2.2'))
@@ -310,11 +310,61 @@ void main() {
       expect(copies, hasLength(1));
       expect(await copies.single.readAsString(), 'local-only asset');
       expect(
+        (await FileManager.getChildrenOfDirectory('/'))!.directories,
+        contains('同步衝突備份'),
+      );
+      final folder = copies.single.parent.path.substring(root.path.length);
+      expect(
+        (await FileManager.getChildrenOfDirectory(folder))!.files,
+        contains('note'),
+      );
+      await sync.sync();
+      expect(
         ((await manifest())['files'] as List).any(
-          (f) => (f as Map)['path'] == '/note.sbn2.2',
+          (f) =>
+              (f as Map)['path'] == '/note.sbn2.2' ||
+              (f['path'] as String).startsWith('/同步衝突備份/'),
         ),
         false,
       );
+    },
+  );
+  test(
+    'completed hidden backups become browsable without cloud publication',
+    () async {
+      final id = 'a' * 64;
+      await local('/.yc-conflicts/$id/course/note.sbn2', 'preserved main');
+      await local('/.yc-conflicts/$id/course/note.sbn2.0', 'preserved asset');
+      await local(
+        '/.yc-conflicts/pending-incomplete/note.sbn2',
+        'partial copy',
+      );
+      await sync.sync();
+      final copies = Directory('${root.path}/同步衝突備份')
+          .listSync(recursive: true)
+          .whereType<File>()
+          .toList();
+      expect(copies, hasLength(2));
+      expect(
+        await copies
+            .singleWhere((f) => f.path.endsWith('.sbn2'))
+            .readAsString(),
+        'preserved main',
+      );
+      expect(
+        File('${root.path}/.yc-conflicts/$id/course/note.sbn2').existsSync(),
+        false,
+      );
+      expect(
+        await contents('/.yc-conflicts/pending-incomplete/note.sbn2'),
+        'partial copy',
+      );
+      expect((await manifest())['files'], isEmpty);
+      expect((await FileManager.getChildrenOfDirectory('/'))!.directories, [
+        '同步衝突備份',
+      ]);
+      await sync.sync();
+      expect(Directory('${root.path}/同步衝突備份').listSync(), hasLength(1));
     },
   );
   test(
@@ -327,7 +377,7 @@ void main() {
       expect(sync.message, '已同步');
       expect(await contents('/note.sbn2.pdf'), 'new export');
       expect((await manifest())['files'], hasLength(2));
-      expect(Directory('${root.path}/.yc-conflicts').existsSync(), false);
+      expect(Directory('${root.path}/同步衝突備份').existsSync(), false);
     },
   );
   test(
@@ -346,7 +396,7 @@ void main() {
             as Map)['revision'],
         1,
       );
-      final copies = Directory('${root.path}/.yc-conflicts')
+      final copies = Directory('${root.path}/同步衝突備份')
           .listSync(recursive: true)
           .whereType<File>()
           .where((f) => f.path.endsWith('/note.sbn2'));

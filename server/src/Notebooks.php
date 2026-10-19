@@ -12,8 +12,8 @@ trait Notebooks
     private function notebookHeads(int $uid, string $path): array
     {
         self::validPath($path);
-        if (!preg_match('/\.sbn2?$/D', $path)) throw new ApiError(422, '無效的筆記。');
-        $heads=array_column($this->manifest($uid), null, 'path');
+        self::validNotebookPath($path);
+        $heads=self::notebookGroups($this->manifest($uid))[$path]??[];
         if (!isset($heads[$path]) || $heads[$path]['deleted']) throw new ApiError(404, '找不到筆記。');
         return $heads;
     }
@@ -56,10 +56,12 @@ trait Notebooks
     public function notebooks(int $uid): array
     {
         $this->rentalUser($uid);
-        $heads=array_column($this->manifest($uid),null,'path');
+        $groups=self::notebookGroups($this->manifest($uid));
+        $tracked=array_column($this->query('SELECT latest.*,kept.size AS restore_size FROM (SELECT path_hash,MAX(version) AS version,MAX(CASE WHEN deleted=0 THEN version ELSE NULL END) AS restore_version FROM notebook_versions WHERE user_id=? GROUP BY path_hash) latest LEFT JOIN notebook_versions kept ON kept.user_id=? AND kept.path_hash=latest.path_hash AND kept.version=latest.restore_version',[$uid,$uid]),null,'path_hash');
         $books=[];
-        foreach ($heads as $path=>$head) {
-            if (!preg_match('/\.sbn2?$/D',$path)) continue;
+        foreach ($groups as $path=>$heads) {
+            $head=$heads[$path]??null;
+            if (!$head) continue;
             $sources=$this->notebookSources($path,$heads);
             $cover=$heads[$path.'.p']??null;
             $ready=false;
@@ -71,9 +73,12 @@ trait Notebooks
             $books[]=$head+[
                 'title'=>preg_replace('/\.sbn2?$/D','',basename($path)),
                 'folder'=>dirname($path)==='/'?'':trim(dirname($path),'/'),
-                'total_size'=>array_sum(array_column($sources,'size')),
+                'total_size'=>$head['deleted']?(int)($tracked[hash('sha256',$path)]['restore_size']??0):array_sum(array_column($sources,'size')),
                 'cover'=>!$head['deleted'] && $cover && !$cover['deleted'],
                 'pdf_ready'=>$ready,
+                'fingerprint'=>self::snapshotHash(array_values($heads)),
+                'restore_version'=>(int)($tracked[hash('sha256',$path)]['restore_version']??0),
+                'note_version'=>(int)($tracked[hash('sha256',$path)]['version']??0),
             ];
         }
         usort($books,static fn($a,$b)=>$b['updated_at']<=>$a['updated_at'] ?: strcmp($a['path'],$b['path']));
@@ -103,6 +108,11 @@ trait Notebooks
     {
         $this->rentalUser($uid);
         $sources=$this->notebookSources($path,$this->notebookHeads($uid,$path));
+        return $this->archiveNotebookSources($uid,$path,$sources);
+    }
+
+    private function archiveNotebookSources(int $uid,string $path,array $sources): array
+    {
         if (!class_exists(ZipArchive::class)) throw new RuntimeException('ZIP support unavailable');
         $directory=dirname($this->config['storage_path']).'/exports';
         if (!is_dir($directory) && !mkdir($directory,0700,true) && !is_dir($directory)) throw new RuntimeException('Export directory unavailable');

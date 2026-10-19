@@ -28,7 +28,7 @@ try {
     if (!is_dir($root)&&!mkdir($root,0700,true)) throw new RuntimeException('private_directory');
     chmod($root,0700);
     if (!is_file($root.'/.yc-note')) file_put_contents($root.'/.yc-note','YC Note deployment');
-    $allowed=['src/bootstrap.php','src/Service.php','src/SyncTransactions.php','src/Notebooks.php','src/SecurityBridge.php','public/index.php','public/api.php','public/boot.php','public/style.css','public/icon.svg','public/.htaccess'];
+    $allowed=['src/bootstrap.php','src/Service.php','src/SyncTransactions.php','src/NotebookVersions.php','src/Notebooks.php','src/SecurityBridge.php','public/index.php','public/api.php','public/boot.php','public/style.css','public/icon.svg','public/.htaccess'];
     $release=$root.'/releases/'.gmdate('YmdHis').'-'.bin2hex(random_bytes(4));
     mkdir($release,0700,true);
     foreach ($allowed as $relative) {

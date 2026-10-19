@@ -124,6 +124,10 @@ class YcSync extends ChangeNotifier {
       final stateFile = _file(root, YcLocalBatch.statePath);
       final pendingFile = File(p.join(root, '.yc-sync-pending.json'));
       await batch.recover();
+      await YcFileCoordinator.run(() async {
+        requireAccount();
+        await _revealPreviousBackups(root);
+      });
       final pdfsReady =
           await (preparePdfs?.call() ??
               YcPdfExports.ensureAll(canContinue: () => !editing));
@@ -468,10 +472,29 @@ class YcSync extends ChangeNotifier {
   static bool _incoming(YcSyncAction action) =>
       action == YcSyncAction.download || action == YcSyncAction.deleteLocal;
 
+  static String _backupName() =>
+      '${DateTime.now().toIso8601String().replaceAll(':', '-').replaceAll('.', '-')} ${_id().substring(0, 8)}';
+
+  Future<void> _revealPreviousBackups(String root) async {
+    final previous = Directory(p.join(root, '.yc-conflicts'));
+    if (!previous.existsSync()) return;
+    await for (final entity in previous.list(followLinks: false)) {
+      // Only completed legacy generations have a 64-character receipt name.
+      // Interrupted copies stay hidden; they must not look like valid notes.
+      if (entity is! Directory ||
+          !RegExp(r'^[a-f0-9]{64}$').hasMatch(p.basename(entity.path)))
+        continue;
+      final destination = await Directory(p.join(root, '同步衝突備份'))
+          .create(recursive: true);
+      await entity.rename(p.join(destination.path, _backupName()));
+      FileManager.broadcastFileWrite(FileOperationType.write, '/同步衝突備份');
+    }
+  }
+
   Future<void> _backup(String root, Map<String, String> local) async {
-    final directory = await Directory(p.join(root, '.yc-conflicts'))
+    final directory = await Directory(p.join(root, '同步衝突備份'))
         .create(recursive: true);
-    final temporary = await directory.createTemp('pending-');
+    final temporary = await directory.createTemp('.pending-');
     try {
       for (final path in local.keys) {
         final target = _file(temporary.path, path);
@@ -484,7 +507,8 @@ class YcSync extends ChangeNotifier {
           await handle.close();
         }
       }
-      await temporary.rename(p.join(directory.path, _id()));
+      await temporary.rename(p.join(directory.path, _backupName()));
+      FileManager.broadcastFileWrite(FileOperationType.write, '/同步衝突備份');
     } catch (_) {
       await temporary.delete(recursive: true);
       rethrow;

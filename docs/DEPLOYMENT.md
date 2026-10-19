@@ -23,7 +23,7 @@
 
 ## 帳號與資料庫
 
-YC Note 保留 11 張表：owners、devices、tokens、files、revisions、audit、rate_limits、note_accounts、access_rules、sync_staging、sync_commits。note_accounts 僅保留歷史資料，不再登入或新增。
+YC Note 保留 12 張表：owners、devices、tokens、files、revisions、audit、rate_limits、note_accounts、access_rules、sync_staging、sync_commits、notebook_versions。note_accounts 僅保留歷史資料，不再登入或新增。整本版本功能需要私有核心整合版本 4 與配套租屋檔案一起發布。
 
 租屋 `users` 為唯一帳號來源。`super_admin` 預設開放；`admin`／歷史 `manager` 需在筆記權限頁授權。租客不可開放，代登入也不能看私人筆記。筆記權限不改動租屋角色；新增／刪除使用者沿用租屋原生安全流程。
 
@@ -51,7 +51,9 @@ PDF 由更新後的 App 在列表同步時預先生成，網站不直接執行 F
 
 `stage` 上傳不更動可見筆記，`commit` 以帳號快照與各檔基準版本比對後，單次交易發布所有修改並保留收據 7 天。待提交內容保留約 24 小時；未使用收據過期後仍依內容與版本重新同步。帳號首次採用原子同步後，舊逐檔寫入回覆 426，其他裝置須更新 App。
 
-本機 `.yc-local-batch` 先保存修改前後內容，再發布整批原稿／附件／基準。啟動先恢復日誌；隱藏日誌、暫存與衝突備份不出現在一般筆記列表。伺服器原子提交與整本歷史還原不同，目前歷史頁仍列主檔版本。
+`notebook_versions` 保存每次原子提交的整本原稿及編號附件關係，不含衍生 PDF／封面。首次遷移只保存當下實際內容；既有逐檔歷史無法可靠推測當時附件配對，仍保留為「主檔記錄」。網站歷史原稿下載為該版本完整 SBA。還原與移至垃圾桶採同一 SQL 交易及整本指紋檢查；舊表單回覆 409 並重新顯示目前資料，唯讀不可操作。還原使原有 PDF／封面失效，由 App 後續同步重新生成。刪除仍保留版本並計入配額；目前沒有永久清除。
+
+本機 `.yc-local-batch` 先保存修改前後內容，再發布整批原稿／附件／基準。啟動先恢復日誌；隱藏日誌與暫存不出現在一般筆記列表。新 App 的完整衝突副本顯示在「同步衝突備份」，並搬移舊隱藏完整副本；此資料夾不參與雲端同步或批次 PDF 生成。副本可在 App 開啟，使用者要採用時可透過檔案操作移出此資料夾。
 
 ## 裝置與登入
 
@@ -61,8 +63,10 @@ App 首次人工核准；已核准且未過期的登入成功驗證後延至 90 
 
 ## iPad
 
-PDF 功能版已更新安裝，最新 PDF 同步仍待實機驗證；已配對的 iPad 可經 localNetwork 無線安裝。原生依賴採 CocoaPods，先 flutter pub get，再於 ios/ 執行 pod install；Rust 需 1.97.1 與 aarch64-apple-ios target。iOS bundle ID 為 com.yckuo.ycnote。Flutter/Dart 仍須 Apple Xcode 編譯簽署。
+PDF 功能版已更新安裝，使用者回覆「看過沒問題」，記為手動確認；沒有再次要求裝置驗證。已配對的 iPad 可經 localNetwork 無線安裝。新衝突副本可見與遷移功能尚未安裝到實機。原生依賴採 CocoaPods，先 flutter pub get，再於 ios/ 執行 pod install；Rust 需 1.97.1 與 aarch64-apple-ios target。iOS bundle ID 為 com.yckuo.ycnote。Flutter/Dart 仍須 Apple Xcode 編譯簽署。
 
-免費 Personal Team 安裝簽署為 7 天；付費 Apple Developer 年費 US$99，地方售價以申請畫面為準，可使用較長效期的裝置簽署且不必上架。實際到期時間依簽發 profile 確認，網站不能延長 Apple 簽章效期。
+使用者不升級付費 Apple Developer。免費 Personal Team 安裝簽署為 7 天，實際到期時間依簽發 profile 確認；網站不能延長 Apple 簽章效期。免費遠端續簽方案與尚未執行的切換步驟見 IOS-SIGNING.md。
+
+2026-10-20 私有 IPA 已編譯並驗證完整簽章，尚未再次安裝；profile 仍到期於 2026-10-26 06:13:27 UTC。IPA 含裝置描述檔，不提交 GitHub，也不混入伺服器套件。伺服器 ZIP 與部署收據改以實際當日日期命名。
 
 [Apple 帳號限制](https://developer.apple.com/help/account/basics/about-your-developer-account)、[會員費用](https://developer.apple.com/help/account/membership/program-enrollment/)、[Flutter iOS 部署](https://docs.flutter.dev/deployment/ios)。

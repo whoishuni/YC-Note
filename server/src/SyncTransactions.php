@@ -144,18 +144,11 @@ trait SyncTransactions
                 $added+=$change['size'];
             }
             $used=(int)$this->query('SELECT COALESCE(SUM(size),0) AS n FROM revisions WHERE user_id=?',[$uid])[0]['n'];
-            if ($used+$added>$this->config['quota_bytes']) throw new ApiError(507,'儲存空間不足，請聯絡管理者。');
-            $result=['files'=>[]];
-            foreach ($changes as $change) {
-                $pathHash=hash('sha256',$change['path']);
-                $revision=$change['base_revision']+1;
-                $values=[$revision,$change['blob_hash']??null,$change['size'],(int)$change['deleted'],time(),$actor['device_id'],$uid,$pathHash];
-                if (isset($heads[$change['path']])) $this->query('UPDATE files SET revision=?,blob_hash=?,size=?,deleted=?,updated_at=?,device_id=? WHERE user_id=? AND path_hash=?',$values);
-                else $this->query('INSERT INTO files (revision,blob_hash,size,deleted,updated_at,device_id,user_id,path_hash,path) VALUES (?,?,?,?,?,?,?,?,?)',[...$values,$change['path']]);
-                $this->query('INSERT INTO revisions (revision,blob_hash,size,deleted,created_at,device_id,user_id,path_hash) VALUES (?,?,?,?,?,?,?,?)',$values);
-                $this->query('DELETE FROM sync_staging WHERE user_id=? AND device_id=? AND path_hash=? AND blob_hash=?',[$uid,$actor['device_id'],$pathHash,$change['blob_hash']??'']);
-                $result['files'][]=['path'=>$change['path'],'revision'=>$revision,'blob_hash'=>$change['blob_hash']??null,'size'=>$change['size'],'deleted'=>(int)$change['deleted']];
-            }
+            if ($added>0 && $used+$added>$this->config['quota_bytes']) throw new ApiError(507,'儲存空間不足，請聯絡管理者。');
+            $published=$this->publishSyncChanges($uid,$actor['device_id'],$changes,$heads);
+            foreach ($changes as $change) $this->query('DELETE FROM sync_staging WHERE user_id=? AND device_id=? AND path_hash=? AND blob_hash=?',[$uid,$actor['device_id'],hash('sha256',$change['path']),$change['blob_hash']??'']);
+            $this->recordNotebookChanges($uid,$heads,array_replace($heads,array_column($published,null,'path')),array_column($changes,'path'),'sync',$actor['device_id']);
+            $result=['files'=>$published];
             $result['snapshot']=self::snapshotHash($this->manifest($uid));
             $this->query('UPDATE owners SET sync_version=1 WHERE user_id=?',[$uid]);
             $this->query('INSERT INTO sync_commits (user_id,device_id,commit_id,request_hash,result,created_at) VALUES (?,?,?,?,?,?)',[$uid,$actor['device_id'],$id,$requestHash,json_encode($result,JSON_THROW_ON_ERROR),time()]);
@@ -165,4 +158,20 @@ trait SyncTransactions
             return $result;
         } catch (Throwable $e) { if ($this->db->inTransaction()) $this->db->rollBack(); throw $e; }
     }
+    /** Validated immutable bytes are already stored; caller holds the owner lock. */
+    private function publishSyncChanges(int $uid,string $device,array $changes,array $heads): array
+    {
+        if (!$this->db->inTransaction()) throw new RuntimeException('Publication needs a transaction');
+        $result=[];
+        foreach ($changes as $change) {
+            $pathHash=hash('sha256',$change['path']);$revision=$change['base_revision']+1;
+            $values=[$revision,$change['blob_hash']??null,$change['size'],(int)$change['deleted'],time(),$device,$uid,$pathHash];
+            if (isset($heads[$change['path']])) $this->query('UPDATE files SET revision=?,blob_hash=?,size=?,deleted=?,updated_at=?,device_id=? WHERE user_id=? AND path_hash=?',$values);
+            else $this->query('INSERT INTO files (revision,blob_hash,size,deleted,updated_at,device_id,user_id,path_hash,path) VALUES (?,?,?,?,?,?,?,?,?)',[...$values,$change['path']]);
+            $this->query('INSERT INTO revisions (revision,blob_hash,size,deleted,created_at,device_id,user_id,path_hash) VALUES (?,?,?,?,?,?,?,?)',$values);
+            $result[]=['path'=>$change['path'],'revision'=>$revision,'blob_hash'=>$change['blob_hash']??null,'size'=>$change['size'],'deleted'=>(int)$change['deleted']];
+        }
+        return $result;
+    }
+
 }

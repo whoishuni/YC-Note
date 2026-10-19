@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Deploy only YC Note. Credentials arrive on stdin and are never printed."""
 from pathlib import Path
+from datetime import date
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 from urllib.error import HTTPError
 import base64, hashlib, json, os, secrets
@@ -31,7 +32,7 @@ try:
     if status!=201: raise RuntimeError('Unexpected upload creation status '+str(status))
     status,_=send(target,'PATCH',source,{**auth,'Content-Type':'application/offset+octet-stream'})
     if status!=204: raise RuntimeError('Unexpected upload status '+str(status))
-    paths=['src/bootstrap.php','src/Service.php','src/SyncTransactions.php','src/Notebooks.php','src/SecurityBridge.php','public/index.php','public/api.php','public/boot.php','public/style.css','public/icon.svg','public/.htaccess']
+    paths=['src/bootstrap.php','src/Service.php','src/SyncTransactions.php','src/NotebookVersions.php','src/Notebooks.php','src/SecurityBridge.php','public/index.php','public/api.php','public/boot.php','public/style.css','public/icon.svg','public/.htaccess']
     rental=Path(data['rental_root']).resolve()
     native=['admin/notes.php','includes/YcNoteModule.php','includes/yc_note_view.php','assets/css/yc-note.css','yc_note/api.php']
     patches=json.loads((ROOT/'scripts/yc_note/rental-patches.json').read_text())
@@ -44,7 +45,7 @@ try:
     status,body=send(installer,'POST',json.dumps(payload).encode(),{'Content-Type':'application/json','X-YC-Install':token})
     result=json.loads(body)
     if not result.get('installed'): raise RuntimeError('Installation did not complete')
-    receipt=ROOT/'docs/deployment-2026-10-19.json'
+    receipt=ROOT/('docs/deployment-'+date.today().isoformat()+'.json')
     receipt.parent.mkdir(exist_ok=True)
     receipt.write_text(json.dumps(result,indent=2)+'\n')
     print(json.dumps(result),flush=True)

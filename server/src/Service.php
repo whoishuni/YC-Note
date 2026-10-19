@@ -8,6 +8,7 @@ use Throwable;
 
 require_once __DIR__.'/SyncTransactions.php';
 require_once __DIR__.'/Notebooks.php';
+require_once __DIR__.'/NotebookVersions.php';
 
 final class ApiError extends RuntimeException
 {
@@ -18,7 +19,8 @@ final class Service
 {
     use SyncTransactions;
     use Notebooks;
-    public const INTEGRATION_VERSION = 3;
+    use NotebookVersions;
+    public const INTEGRATION_VERSION = 4;
     public function __construct(public readonly PDO $db, private PDO $identity, public readonly array $config) {}
 
     private function query(string $sql, array $params = []): array
@@ -47,6 +49,7 @@ final class Service
             $this->db->exec($sql . ($sqlite ? '' : ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin'));
         }
         $this->migrateSync();
+        $this->migrateNotebookVersions();
     }
 
     private function audit(int $actor, string $action, array $detail): void
@@ -284,7 +287,7 @@ final class Service
         $this->rentalUser($uid);
         $head=$this->query('SELECT COUNT(*) AS files,COALESCE(SUM(size),0) AS bytes FROM files WHERE user_id=? AND deleted=0',[$uid])[0];
         $versions=$this->query('SELECT COUNT(*) AS versions,COALESCE(SUM(size),0) AS bytes FROM revisions WHERE user_id=?',[$uid])[0];
-        return ['files'=>(int)$head['files'],'bytes'=>(int)$head['bytes'],'versions'=>(int)$versions['versions'],'retained_bytes'=>(int)$versions['bytes'],'quota_bytes'=>(int)$this->config['quota_bytes']];
+        return ['files'=>(int)$head['files'],'bytes'=>(int)$head['bytes'],'versions'=>(int)$versions['versions'],'retained_bytes'=>(int)$versions['bytes'],'notebook_versions'=>(int)$this->query('SELECT COUNT(*) AS n FROM notebook_versions WHERE user_id=?',[$uid])[0]['n'],'quota_bytes'=>(int)$this->config['quota_bytes']];
     }
 
     public function setDeviceStatus(int $adminId, string $id, string $status): void

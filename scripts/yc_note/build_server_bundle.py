@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Package only deployable YC Note files; never include runtime credentials."""
 from pathlib import Path
+from datetime import date
 import argparse,difflib,hashlib,json,zipfile
 ROOT=Path(__file__).resolve().parents[2]
 parser=argparse.ArgumentParser()
 parser.add_argument('--rental-root',required=True,type=Path)
 args=parser.parse_args()
-output=ROOT/'dist/YC-Note-server-20261019.zip'
+output=ROOT/('dist/YC-Note-server-'+date.today().strftime('%Y%m%d')+'.zip')
 output.parent.mkdir(exist_ok=True)
 manifest={}
 with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as archive:
