@@ -5,7 +5,14 @@ declare(strict_types=1);
 header('Content-Type: application/json');
 header('Cache-Control: no-store');
 if (($_SERVER['REQUEST_METHOD']??'')!=='POST' || !hash_equals('__INSTALL_TOKEN_HASH__',hash('sha256',(string)($_SERVER['HTTP_X_YC_INSTALL']??'')))) { http_response_code(404); exit; }
-$published=[]; $publicPublished=[]; $previousActive=null;
+$published=[]; $publicPublished=[]; $previousActive=null; $changedPointers=false;
+$previousManifest=$previousPublicRoot=null;
+$publish=static function(string $target,string $bytes,int $mode):void {
+    $temp=tempnam(dirname($target),'.yc-release-');
+    try {
+        if (!$temp || file_put_contents($temp,$bytes,LOCK_EX)!==strlen($bytes) || !chmod($temp,$mode) || !rename($temp,$target)) throw new RuntimeException('pointer_publish');
+    } finally { if ($temp && is_file($temp)) unlink($temp); }
+};
 try {
     if (($_SERVER['HTTPS']??'')!=='on') throw new RuntimeException('https_required');
     $body=file_get_contents('php://input',false,null,0,2*1024*1024+1);
@@ -111,9 +118,11 @@ try {
         if (!$temp || file_put_contents($temp,$bytes,LOCK_EX)!==strlen($bytes) || !chmod($temp,0644) || !rename($temp,$target)) throw new RuntimeException('native_publish');
         $published[]=$name;
     }
-    file_put_contents($root.'/rental-installed.json',json_encode(array_map(static fn($b)=>hash('sha256',$b),$pending),JSON_THROW_ON_ERROR),LOCK_EX);
-    chmod($root.'/rental-installed.json',0600);
-    file_put_contents($root.'/active-release',$release,LOCK_EX);
+    $previousManifest=is_file($root.'/rental-installed.json')?file_get_contents($root.'/rental-installed.json'):null;
+    $previousPublicRoot=is_file($public.'/.local-root.php')?file_get_contents($public.'/.local-root.php'):null;
+    $changedPointers=true;
+    $publish($root.'/rental-installed.json',json_encode(array_map(static fn($b)=>hash('sha256',$b),$pending),JSON_THROW_ON_ERROR),0600);
+    $publish($root.'/active-release',$release,0600);
     if (!is_dir($public)) mkdir($public,0755,true);
     foreach ($allowed as $relative) {
         if (!str_starts_with($relative,'public/')) continue;
@@ -129,8 +138,7 @@ try {
         if (!rename($temp,$public.'/'.$name)) throw new RuntimeException('public_activate');
         $publicPublished[]=$name;
     }
-    file_put_contents($public.'/.local-root.php',"<?php return ".var_export($release,true).";\n",LOCK_EX);
-    chmod($public.'/.local-root.php',0600);
+    $publish($public.'/.local-root.php',"<?php return ".var_export($release,true).";\n",0600);
     $removed=unlink(__FILE__);
     echo json_encode(['installed'=>true,'database'=>'u805049489_ycnote','tables'=>$tableCount,'super_admin_count'=>$sharedCount,'base_url'=>'https://yckuo.com/rent/admin/notes.php','legacy_url'=>'https://yckuo.com/yc_note/','rental_files'=>count($pending),'private_root'=>$root,'public_root'=>$public,'installer_removed'=>$removed],JSON_THROW_ON_ERROR);
  } catch (Throwable $e) {
@@ -145,7 +153,12 @@ try {
         if (is_file($saved)) {copy($saved,$nativeRoot.'/'.$name);chmod($nativeRoot.'/'.$name,0644);}
         else @unlink($nativeRoot.'/'.$name);
     }
-    if ($previousActive!==null) file_put_contents($root.'/active-release',$previousActive,LOCK_EX);
+    if ($changedPointers) {
+        if ($previousActive!==null) $publish($root.'/active-release',$previousActive,0600);
+        if ($previousManifest!==null) $publish($root.'/rental-installed.json',$previousManifest,0600);
+        else @unlink($root.'/rental-installed.json');
+        if ($previousPublicRoot!==null) $publish($public.'/.local-root.php',$previousPublicRoot,0600);
+    }
     error_log('[YC Note installer] type='.get_class($e).' code='.(int)$e->getCode().' stage='.$e->getMessage());
     http_response_code(500);
     echo json_encode(['error'=>'installation_failed','type'=>get_class($e),'code'=>(int)$e->getCode(),'reason'=>$e instanceof Error?substr($e->getMessage(),0,200):null],JSON_THROW_ON_ERROR);
