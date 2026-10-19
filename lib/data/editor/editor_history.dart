@@ -89,9 +89,13 @@ class EditorHistory {
   /// Marks the last change as saved to disk.
   /// This does not modify the history stacks, but allows us to know
   /// whether the current state is saved or not.
-  void markLastChangeAsSaved() {
-    _lastSaved = _past.lastOrNull;
+  EditorHistoryItem? get saveCheckpoint => _past.lastOrNull;
+
+  void markCheckpointAsSaved(EditorHistoryItem? checkpoint) {
+    _lastSaved = checkpoint;
   }
+
+  void markLastChangeAsSaved() => markCheckpointAsSaved(saveCheckpoint);
 
   /// Whether the current state is saved to disk.
   ///

@@ -6,6 +6,9 @@ use PDO;
 use RuntimeException;
 use Throwable;
 
+require_once __DIR__.'/SyncTransactions.php';
+require_once __DIR__.'/Notebooks.php';
+
 final class ApiError extends RuntimeException
 {
     public function __construct(public readonly int $status, string $message) { parent::__construct($message); }
@@ -13,7 +16,9 @@ final class ApiError extends RuntimeException
 
 final class Service
 {
-    public const INTEGRATION_VERSION = 2;
+    use SyncTransactions;
+    use Notebooks;
+    public const INTEGRATION_VERSION = 3;
     public function __construct(public readonly PDO $db, private PDO $identity, public readonly array $config) {}
 
     private function query(string $sql, array $params = []): array
@@ -41,6 +46,7 @@ final class Service
         ] as $sql) {
             $this->db->exec($sql . ($sqlite ? '' : ' ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin'));
         }
+        $this->migrateSync();
     }
 
     private function audit(int $actor, string $action, array $detail): void
@@ -335,6 +341,7 @@ final class Service
         $this->db->beginTransaction();
         try {
             $this->lockOwner($uid);
+            if ((int)($this->query('SELECT sync_version FROM owners WHERE user_id=?',[$uid])[0]['sync_version']??0)>0) throw new ApiError(426,'請更新 YC Note 後同步。');
             $user = $this->webUser($uid, $actor['identity_hash']??'');
             if (!$this->canWrite($user)) throw new ApiError(403, '目前為唯讀模式。');
             // Recheck authorization after taking the same lock as revocation.

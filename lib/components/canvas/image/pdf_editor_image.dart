@@ -133,6 +133,22 @@ class PdfEditorImage extends EditorImage {
     await _pdfDocument.value!.pages[pdfPage].ensureLoaded();
   }
 
+  Future<PngEditorImage> exportRaster() async {
+    await loadIn();
+    final page = _pdfDocument.value!.pages[pdfPage];
+    final scale = min(2.0, 4096 / max(page.width, page.height));
+    final raster = await page.render(
+      fullWidth: page.width * scale,
+      fullHeight: page.height * scale,
+    );
+    if (raster == null) throw StateError('Could not render PDF attachment');
+    try {
+      return await rasterForExport(await raster.createImage());
+    } finally {
+      raster.dispose();
+    }
+  }
+
   @override
   Future<void> loadIn() async => await super.loadIn();
 

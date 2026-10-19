@@ -22,6 +22,8 @@ void setupMockFlutterSecureStorage() {
 }
 
 final tmpDir = Directory.systemTemp.path;
+// Each test isolate needs its own account journal and preferences.
+final _mockPathRoot = Directory.systemTemp.createTempSync('saber-tests-').path;
 
 void setupMockPathProvider() {
   const channel = MethodChannel('plugins.flutter.io/path_provider');
@@ -29,9 +31,11 @@ void setupMockPathProvider() {
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
         if (methodCall.method == 'getApplicationDocumentsDirectory') {
-          return '$tmpDir/saber-test-docs';
+          return '$_mockPathRoot/docs';
+        } else if (methodCall.method == 'getApplicationSupportDirectory') {
+          return '$_mockPathRoot/support';
         } else if (methodCall.method == 'getTemporaryDirectory') {
-          return '$tmpDir/saber-test-tmp';
+          return '$_mockPathRoot/tmp';
         }
         return null;
       });

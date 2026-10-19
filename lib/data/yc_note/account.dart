@@ -167,6 +167,7 @@ class YcAccount extends ChangeNotifier {
     await FileManager.init(
       documentsDirectory: '${root.path}/YC Note/accounts/$namespace',
       shouldWatchRootDirectory: false,
+      accountNamespace: namespace,
     );
     await Directory(FileManager.documentsDirectory).create(recursive: true);
     await stows.recentFiles.waitUntilRead();
@@ -236,7 +237,7 @@ class YcAccount extends ChangeNotifier {
       await _save();
     } on YcApiException catch (e) {
       error = e.message;
-      if (e.status < 500) {
+      if (e.status == 401 || e.status == 403) {
         _session['status'] = e.status == 401 ? 'expired' : 'revoked';
         _session['verified_at'] = 0;
         await _save();

@@ -14,12 +14,12 @@ try {
     if ($service->config['production'] && ($_SERVER['HTTPS'] ?? '') !== 'on') throw new YcNote\ApiError(400, '必須使用 HTTPS。');
     $action = $_GET['action'] ?? 'session';
     $method = $_SERVER['REQUEST_METHOD'];
-    $allowed = ['login'=>'POST','session'=>'GET','logout'=>'POST','manifest'=>'GET','download'=>'GET','history'=>'GET','upload'=>'PUT','delete'=>'DELETE','restore'=>'POST'];
-    if (!isset($allowed[$action])) throw new YcNote\ApiError(404, '找不到此功能。');
+    $allowed = ['login'=>'POST','session'=>'GET','logout'=>'POST','manifest'=>'GET','download'=>'GET','history'=>'GET','upload'=>'PUT','delete'=>'DELETE','restore'=>'POST','stage'=>'PUT','commit'=>'POST'];
+    if (!is_string($action) || !isset($allowed[$action])) throw new YcNote\ApiError(404, '找不到此功能。');
     if ($method !== $allowed[$action]) { header('Allow: ' . $allowed[$action]); throw new YcNote\ApiError(405, '無效的請求方式。'); }
-    $readJson = static function (): array {
-        $body = file_get_contents('php://input', false, null, 0, 8193);
-        if ($body === false || strlen($body) > 8192) throw new YcNote\ApiError(413, '請求過大。');
+    $readJson = static function (int $max=8192): array {
+        $body = file_get_contents('php://input', false, null, 0, $max+1);
+        if ($body === false || strlen($body) > $max) throw new YcNote\ApiError(413, '請求過大。');
         try { $data = json_decode($body, true, flags: JSON_THROW_ON_ERROR); }
         catch (JsonException) { throw new YcNote\ApiError(422, '無效的 JSON。'); }
         if (!is_array($data)) throw new YcNote\ApiError(422, '無效的 JSON。');
@@ -43,7 +43,7 @@ try {
         $token = str_starts_with($authorization, 'Bearer ') ? substr($authorization, 7) : '';
         $actor = $service->authenticate($token, !in_array($action, ['session','logout'], true));
         if ($action !== 'logout') YcNote\SecurityBridge::maintenance($service,$actor['yc_role']);
-        if (in_array($action,['upload','delete','restore'],true) && !$actor['can_write']) throw new YcNote\ApiError(403,'目前為唯讀模式。');
+        if (in_array($action,['upload','delete','restore','stage','commit'],true) && !$actor['can_write']) throw new YcNote\ApiError(403,'目前為唯讀模式。');
         $service->rateLimit('api|' . $actor['device_id'], 300, 60);
         $uid = (int) $actor['user_id'];
         $path = $_GET['path'] ?? '';
@@ -51,7 +51,19 @@ try {
         switch ($action) {
             case 'session': $result = $service->session($token); break;
             case 'logout': $service->logout($token); $result = ['ok'=>true]; break;
-            case 'manifest': $result = ['files'=>$service->manifest($uid)]; break;
+            case 'manifest': $result = $service->snapshot($uid); break;
+            case 'stage':
+                $max=$service->config['max_file_bytes'];
+                if ((int)($_SERVER['CONTENT_LENGTH']??0)>$max) throw new YcNote\ApiError(413,'檔案過大。');
+                $bytes=file_get_contents('php://input',false,null,0,$max+1);
+                if ($bytes===false) throw new RuntimeException('Cannot read transfer');
+                $result=$service->stageSync($actor,$path,(string)($_SERVER['HTTP_X_YC_BLOB_HASH']??''),$bytes);
+                break;
+            case 'commit':
+                $data=$readJson(4*1024*1024);
+                if (!is_string($data['commit_id']??null) || !is_string($data['snapshot']??null) || !is_array($data['changes']??null)) throw new YcNote\ApiError(422,'無效的同步提交。');
+                $result=$service->commitSync($actor,$data['commit_id'],$data['snapshot'],$data['changes']);
+                break;
             case 'history': $result = ['revisions'=>$service->history($uid, $path)]; break;
             case 'download':
                 $file = $service->download($uid, $path, isset($_GET['revision']) ? $integer($_GET['revision']) : null);

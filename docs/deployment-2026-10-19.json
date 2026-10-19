@@ -1,7 +1,7 @@
 {
   "installed": true,
   "database": "u805049489_ycnote",
-  "tables": 9,
+  "tables": 11,
   "super_admin_count": 1,
   "base_url": "https://yckuo.com/rent/admin/notes.php",
   "legacy_url": "https://yckuo.com/yc_note/",

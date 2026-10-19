@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
@@ -8,11 +9,27 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:saber/data/file_manager/file_manager.dart';
 import 'package:saber/data/yc_note/account.dart';
+import 'package:saber/data/yc_note/file_coordinator.dart';
+import 'package:saber/data/yc_note/local_batch.dart';
+import 'package:saber/data/yc_note/pdf_exports.dart';
 import 'package:saber/data/yc_note/sync_plan.dart';
 
 final ycSync = YcSync();
 
 class YcSync extends ChangeNotifier {
+  new({
+    YcApi Function(String)? apiFactory,
+    Future<void> Function()? refreshAccount,
+    Future<Directory> Function()? supportDirectory,
+    this.preparePdfs,
+  }) : _apiFactory = apiFactory ?? ((token) => YcApi(token: token)),
+       _refreshAccount = refreshAccount ?? ycAccount.refresh,
+       _supportDirectory = supportDirectory ?? getApplicationSupportDirectory;
+
+  final Future<bool> Function()? preparePdfs;
+  final YcApi Function(String) _apiFactory;
+  final Future<void> Function() _refreshAccount;
+  final Future<Directory> Function() _supportDirectory;
   var message = '尚未同步';
   var editing = false;
   bool get busy => _running != null;
@@ -26,9 +43,7 @@ class YcSync extends ChangeNotifier {
     _writes ??= FileManager.fileWriteStream.stream.listen((_) => schedule());
     _periodic ??= Timer.periodic(const Duration(minutes: 2), (_) => schedule());
     ycAccount.addListener(schedule);
-    ycAccount.beforeLogout = () async {
-      await _running;
-    };
+    ycAccount.beforeLogout = () async => await _running;
     schedule();
   }
 
@@ -51,243 +66,429 @@ class YcSync extends ChangeNotifier {
     });
   }
 
-  Future<String?> _hash(File file) async => file.existsSync()
-      ? sha256.convert(await file.readAsBytes()).toString()
-      : null;
+  static File _file(String root, String path) =>
+      File(p.join(root, path.substring(1)));
+  static Future<String?> _hash(File file) async =>
+      file.existsSync() ? YcLocalBatch.digest(file) : null;
+  static String? _remoteHash(Map<String, dynamic>? f) =>
+      f == null || f['deleted'] == 1 ? null : f['blob_hash'] as String;
+  static int _revision(Map<String, dynamic>? f) =>
+      (f?['revision'] as num?)?.toInt() ?? 0;
+  static Map<String, dynamic> _baseline(Map<String, dynamic> f) => {
+    'revision': _revision(f),
+    'hash': _remoteHash(f),
+  };
+  static String _group(String path) =>
+      RegExp(r'^(.+\.sbn2?)(?:\.(?:[0-9]+|p|pdf|pdf\.json))?$')
+          .firstMatch(path)
+          ?.group(1) ??
+      path;
+  static String _id() => List.generate(
+    32,
+    (_) => Random.secure().nextInt(256).toRadixString(16).padLeft(2, '0'),
+  ).join();
+
+  static Future<Map<String, dynamic>> _readJson(File file) async =>
+      file.existsSync()
+      ? Map<String, dynamic>.from(jsonDecode(await file.readAsString()) as Map)
+      : {};
+
+  static Future<void> _writeJson(File file, Object data) async {
+    final temp = File('${file.path}.next');
+    await temp.parent.create(recursive: true);
+    await temp.writeAsString(jsonEncode(data), flush: true);
+    await temp.rename(file.path);
+  }
 
   Future<void> _sync() async {
-    final api = YcApi(token: ycAccount.token);
+    YcApi? api;
+    Directory? workspace;
     final root = FileManager.documentsDirectory;
     final namespace = ycAccount.namespace;
+    bool sameAccount() =>
+        ycAccount.canUse &&
+        ycAccount.namespace == namespace &&
+        FileManager.documentsDirectory == root;
+    void requireAccount() {
+      if (!sameAccount()) throw StateError('Account changed during sync');
+    }
+
     try {
       message = '同步中…';
       notifyListeners();
-      await ycAccount.refresh();
-      if (!ycAccount.canUse) return;
-      final support = await getApplicationSupportDirectory();
-      final stateFile = File('${support.path}/YC Note/sync/$namespace.json');
-      final base = stateFile.existsSync()
-          ? jsonDecode(await stateFile.readAsString()) as Map<String, dynamic>
-          : <String, dynamic>{};
+      await _refreshAccount();
+      if (!sameAccount()) return;
+      // Refresh may have renewed credentials. Never capture the old token.
+      api = _apiFactory(ycAccount.token);
+      final batch = YcLocalBatch(root);
+      final stateFile = _file(root, YcLocalBatch.statePath);
+      final pendingFile = File(p.join(root, '.yc-sync-pending.json'));
+      await batch.recover();
+      final pdfsReady =
+          await (preparePdfs?.call() ??
+              YcPdfExports.ensureAll(canContinue: () => !editing));
+      requireAccount();
+      if (!stateFile.existsSync()) {
+        final support = await _supportDirectory();
+        final old = File(p.join(support.path, 'YC Note/sync/$namespace.json'));
+        if (old.existsSync()) await _writeJson(stateFile, await _readJson(old));
+      }
+      final base = await _readJson(stateFile);
+      workspace = await Directory(root).createTemp('.yc-sync-');
+      final working = workspace;
+      Future<void> saveBase() async {
+        requireAccount();
+        final source = File(p.join(working.path, 'state'));
+        await _writeJson(source, base);
+        await batch.apply({YcLocalBatch.statePath: source});
+      }
+
+      Future<void> sendPending(Map<String, dynamic> pending) async {
+        requireAccount();
+        if (!ycAccount.canWrite) throw const YcApiException(403, '目前為唯讀模式。');
+        Map<String, dynamic> result;
+        try {
+          result = await api!.json('POST', 'commit', data: pending);
+        } on YcApiException catch (e) {
+          // A rejected compare-and-swap has no writes. Retain the exact request
+          // for every other failure, including a lost response after commit.
+          if (e.status == 409 && pendingFile.existsSync()) {
+            await pendingFile.delete();
+          }
+          rethrow;
+        }
+        final changes = pending['changes'] as List;
+        final files = result['files'] as List;
+        if (changes.length != files.length) {
+          throw const FormatException('Incomplete commit receipt');
+        }
+        final received = <String, Map<String, dynamic>>{
+          for (final f in files)
+            (f as Map)['path'] as String: Map<String, dynamic>.from(f),
+        };
+        for (final raw in changes) {
+          final change = raw as Map;
+          final f = received[change['path']];
+          if (f == null ||
+              _revision(f) != (change['base_revision'] as int) + 1 ||
+              _remoteHash(f) != change['blob_hash'] ||
+              (f['deleted'] == 1) != change['deleted']) {
+            throw const FormatException('Invalid commit receipt');
+          }
+        }
+        requireAccount();
+        for (final f in received.values) {
+          base[f['path'] as String] = _baseline(f);
+        }
+        await saveBase();
+        if (pendingFile.existsSync()) await pendingFile.delete();
+      }
+
+      if (pendingFile.existsSync())
+        await sendPending(await _readJson(pendingFile));
+      requireAccount();
       final response = await api.json('GET', 'manifest');
+      if (!(response['capabilities'] as List? ?? []).contains(
+            'atomic_sync_v1',
+          ) ||
+          response['snapshot'] is! String ||
+          !RegExp(r'^[a-f0-9]{64}$').hasMatch(response['snapshot'] as String)) {
+        message = '伺服器需要更新，筆記已保留在本機。';
+        return;
+      }
       final remote = <String, Map<String, dynamic>>{};
       for (final value in response['files'] as List) {
         final f = Map<String, dynamic>.from(value as Map);
-        final path = f['path'] as String;
-        if (!_validPath(path))
-          throw const FormatException('Unsafe remote file path');
+        final path = f['path'];
+        if (path is! String ||
+            !YcLocalBatch.validPath(path) ||
+            remote.containsKey(path) ||
+            f['revision'] is! num ||
+            _revision(f) < 1 ||
+            f['size'] is! num ||
+            (f['size'] as num) < 0 ||
+            ![0, 1].contains(f['deleted']) ||
+            (f['deleted'] == 0 &&
+                (f['blob_hash'] is! String ||
+                    !RegExp(r'^[a-f0-9]{64}$')
+                        .hasMatch(f['blob_hash'] as String)))) {
+          throw const FormatException('Invalid remote manifest');
+        }
         remote[path] = f;
       }
       final local = <String, String>{};
-      await for (final f in Directory(
-        root,
-      ).list(recursive: true, followLinks: false)) {
-        if (f is! File) continue;
-        final relative =
-            '/${p.relative(f.path, from: root).replaceAll(p.separator, '/')}';
-        if (!_validPath(relative)) continue;
-        local[relative] = (await _hash(f))!;
-      }
-      Future<void> saveState() async {
-        await stateFile.parent.create(recursive: true);
-        final temp = File('${stateFile.path}.tmp');
-        await temp.writeAsString(jsonEncode(base), flush: true);
-        await temp.rename(stateFile.path);
-      }
-
-      final paths = {...base.keys, ...local.keys, ...remote.keys}.toList()
-        ..sort((a, b) {
-          // Attachments first; notebook files become visible after their assets.
-          final am = a.endsWith('.sbn2') || a.endsWith('.sbn');
-          final bm = b.endsWith('.sbn2') || b.endsWith('.sbn');
-          return am == bm
-              ? a.compareTo(b)
-              : am
-              ? 1
-              : -1;
-        });
-      String? backupPath;
+      final actions = <String, YcSyncAction>{};
+      final uploads = <String, File>{};
+      final localGroups = <String>{};
+      final remoteGroups = <String>{};
       var skippedReadOnlyEdits = false;
-      // Take the conflict snapshot before ANY remote assets are applied.
-      for (final path in paths) {
-        final previous = base[path] as Map<String, dynamic>?;
-        final r = remote[path];
-        final action = planYcSync(
-          localHash: local[path],
-          remoteHash: r == null || r['deleted'] == 1
-              ? null
-              : r['blob_hash'] as String?,
-          remoteRevision: (r?['revision'] as num?)?.toInt() ?? 0,
-          baseHash: previous?['hash'] as String?,
-          baseRevision: (previous?['revision'] as num?)?.toInt() ?? 0,
-          hasBase: previous != null,
-        );
-        if (action == YcSyncAction.conflict) {
-          if (editing) {
-            message = '本機已保留；請返回筆記列表完成同步。';
-            return;
+      var backupCreated = false;
+      await YcFileCoordinator.run(() async {
+        requireAccount();
+        await for (final entity in Directory(
+          root,
+        ).list(recursive: true, followLinks: false)) {
+          if (entity is! File) continue;
+          final relative =
+              '/${p.relative(entity.path, from: root).replaceAll(p.separator, '/')}';
+          if (!YcLocalBatch.validPath(relative) ||
+              relative.startsWith('/同步衝突備份/'))
+            continue;
+          local[relative] = (await _hash(entity))!;
+        }
+        final paths = {...base.keys, ...local.keys, ...remote.keys}.toList()
+          ..sort();
+        final conflicts = <String>{};
+        for (final path in paths) {
+          if (!YcLocalBatch.validPath(path))
+            throw const FormatException('Invalid synchronization baseline');
+          final previous = base[path] as Map?;
+          final r = remote[path];
+          if (_revision(
+                    previous == null
+                        ? null
+                        : Map<String, dynamic>.from(previous),
+                  ) >
+                  0 &&
+              r == null) {
+            throw StateError('Missing remote history');
           }
-          backupPath = await _backup(root);
-          break;
+          actions[path] = planYcSync(
+            localHash: local[path],
+            remoteHash: _remoteHash(r),
+            remoteRevision: _revision(r),
+            baseHash: previous?['hash'] as String?,
+            baseRevision: (previous?['revision'] as num?)?.toInt() ?? 0,
+            hasBase: previous != null,
+          );
+          final group = _group(path);
+          if (local[path] != _remoteHash(r) && local[path] != previous?['hash'])
+            localGroups.add(group);
+          final remoteChanged = previous == null
+              ? _remoteHash(r) != null
+              : _revision(r) != (previous['revision'] as num?)?.toInt();
+          if (local[path] != _remoteHash(r) && remoteChanged)
+            remoteGroups.add(group);
+          if (actions[path] == YcSyncAction.conflict)
+            conflicts.add(_group(path));
+        }
+        conflicts.addAll(localGroups.intersection(remoteGroups));
+        for (final path in paths) {
+          if (conflicts.contains(_group(path))) {
+            actions[path] = local[path] == _remoteHash(remote[path])
+                ? YcSyncAction.none
+                : _remoteHash(remote[path]) == null
+                ? YcSyncAction.deleteLocal
+                : YcSyncAction.download;
+          }
+          if (!ycAccount.canWrite &&
+              [
+                YcSyncAction.upload,
+                YcSyncAction.deleteRemote,
+              ].contains(actions[path])) {
+            skippedReadOnlyEdits = true;
+            actions.remove(path);
+          }
+        }
+        if (editing && actions.values.any(_incoming)) return;
+        for (final entry in actions.entries) {
+          if (entry.value != YcSyncAction.upload) continue;
+          final copy = await _file(
+            root,
+            entry.key,
+          ).copy(p.join(working.path, 'upload-${uploads.length}'));
+          if (await _hash(copy) != local[entry.key])
+            throw StateError('Local snapshot changed');
+          uploads[entry.key] = copy;
+        }
+      });
+      if (editing && actions.values.any(_incoming)) {
+        message = '請返回筆記列表完成同步。';
+        return;
+      }
+      final outgoing = <Map<String, dynamic>>[];
+      for (final entry in actions.entries) {
+        requireAccount();
+        if (entry.value == YcSyncAction.upload) {
+          if (!ycAccount.canWrite) throw const YcApiException(403, '目前為唯讀模式。');
+          final bytes = await uploads[entry.key]!.readAsBytes();
+          await api.request(
+            'PUT',
+            'stage',
+            query: {'path': entry.key},
+            headers: {
+              'X-YC-Blob-Hash': local[entry.key]!,
+              'Content-Type': 'application/octet-stream',
+            },
+            body: bytes,
+          );
+          outgoing.add({
+            'path': entry.key,
+            'base_revision': _revision(remote[entry.key]),
+            'blob_hash': local[entry.key],
+            'size': bytes.length,
+            'deleted': false,
+          });
+        } else if (entry.value == YcSyncAction.deleteRemote) {
+          outgoing.add({
+            'path': entry.key,
+            'base_revision': _revision(remote[entry.key]),
+            'blob_hash': null,
+            'size': 0,
+            'deleted': true,
+          });
         }
       }
-      for (final path in paths) {
-        if (!ycAccount.canUse || ycAccount.namespace != namespace) return;
-        final previous = base[path] as Map<String, dynamic>?;
-        final r = remote[path];
-        if (previous != null && r == null)
-          throw StateError('伺服器缺少既有檔案記錄，已停止同步以保護本機筆記。');
-        final remoteRevision = (r?['revision'] as num?)?.toInt() ?? 0;
-        final remoteHash = r == null || r['deleted'] == 1
-            ? null
-            : r['blob_hash'] as String?;
-        final file = File(p.join(root, path.substring(1)));
-        var action = planYcSync(
-          localHash: local[path],
-          remoteHash: remoteHash,
-          remoteRevision: remoteRevision,
-          baseHash: previous?['hash'] as String?,
-          baseRevision: (previous?['revision'] as num?)?.toInt() ?? 0,
-          hasBase: previous != null,
-        );
-        if (!ycAccount.canWrite &&
-            (action == YcSyncAction.upload ||
-                action == YcSyncAction.deleteRemote)) {
-          // Keep earlier offline edits locally; viewing permissions never upload.
-          skippedReadOnlyEdits = true;
+      if (outgoing.isNotEmpty) {
+        requireAccount();
+        final pending = <String, dynamic>{
+          'commit_id': _id(),
+          'snapshot': response['snapshot'],
+          'changes': outgoing,
+        };
+        await _writeJson(pendingFile, pending);
+        await sendPending(pending);
+      }
+      final incoming = <String, File?>{};
+      for (final entry in actions.entries) {
+        if (!_incoming(entry.value)) continue;
+        requireAccount();
+        if (entry.value == YcSyncAction.deleteLocal) {
+          incoming[entry.key] = null;
           continue;
         }
-        if (editing &&
-            {
-              YcSyncAction.conflict,
-              YcSyncAction.download,
-              YcSyncAction.deleteLocal,
-            }.contains(action)) {
-          message = '本機已保留；請返回筆記列表完成同步。';
-          return;
+        final download = await api.request(
+          'GET',
+          'download',
+          query: {
+            'path': entry.key,
+            'revision': '${_revision(remote[entry.key])}',
+          },
+        );
+        if (sha256.convert(download.bodyBytes).toString() !=
+                _remoteHash(remote[entry.key]) ||
+            download.bodyBytes.length !=
+                (remote[entry.key]!['size'] as num).toInt()) {
+          throw const FormatException('Download verification failed');
         }
-        if (action == YcSyncAction.conflict) {
-          // Preserve the ENTIRE notebook directory, including numbered assets.
-          // A copied .sbn2 file alone would lose its PDF/image attachments.
-          action = remoteHash == null
-              ? YcSyncAction.deleteLocal
-              : YcSyncAction.download;
+        final source = File(
+          p.join(working.path, 'download-${incoming.length}'),
+        );
+        await source.writeAsBytes(download.bodyBytes, flush: true);
+        incoming[entry.key] = source;
+      }
+      final applied = await YcFileCoordinator.run(() async {
+        requireAccount();
+        if (incoming.isNotEmpty && editing) return false;
+        if (incoming.isNotEmpty) {
+          final affected = incoming.keys.map(_group).toSet();
+          final current = <String, String>{};
+          await for (final entity in Directory(
+            root,
+          ).list(recursive: true, followLinks: false)) {
+            if (entity is! File) continue;
+            final path =
+                '/${p.relative(entity.path, from: root).replaceAll(p.separator, '/')}';
+            if (YcLocalBatch.validPath(path) && affected.contains(_group(path)))
+              current[path] = (await _hash(entity))!;
+          }
+          for (final path in {...local.keys, ...current.keys}) {
+            if (affected.contains(_group(path)) && current[path] != local[path])
+              return false;
+          }
+          if (actions.entries.any(
+            (e) =>
+                _incoming(e.value) &&
+                localGroups.contains(_group(e.key)) &&
+                remoteGroups.contains(_group(e.key)),
+          )) {
+            await _backup(root, local);
+            backupCreated = true;
+          }
         }
-        switch (action) {
-          case YcSyncAction.upload:
-            final bytes = await file.readAsBytes();
-            final uploadedHash = sha256.convert(bytes).toString();
-            final result = jsonDecode(
-              (await api.request(
-                'PUT',
-                'upload',
-                query: {'path': path},
-                headers: {
-                  'X-YC-Base-Revision': '$remoteRevision',
-                  'Content-Type': 'application/octet-stream',
-                },
-                body: bytes,
-              )).body,
-            ) as Map<String, dynamic>;
-            base[path] = {'revision': result['revision'], 'hash': uploadedHash};
-          case YcSyncAction.deleteRemote:
-            final result = jsonDecode(
-              (await api.request(
-                'DELETE',
-                'delete',
-                query: {'path': path},
-                headers: {'X-YC-Base-Revision': '$remoteRevision'},
-              )).body,
-            ) as Map<String, dynamic>;
-            base[path] = {'revision': result['revision'], 'hash': null};
-          case YcSyncAction.download:
-            final download = await api.request(
-              'GET',
-              'download',
-              query: {'path': path, 'revision': '$remoteRevision'},
-            );
-            if (sha256.convert(download.bodyBytes).toString() != remoteHash)
-              throw const FormatException('下載內容驗證失敗。');
-            // Never replace a file edited while a network request was in flight.
-            if (editing || await _hash(file) != local[path]) {
-              message = '筆記正在修改，稍後繼續同步。';
-              return;
-            }
-            await file.parent.create(recursive: true);
-            final temp = File('${file.path}.yc-download');
-            await temp.writeAsBytes(download.bodyBytes, flush: true);
-            await temp.rename(file.path);
-            base[path] = {'revision': remoteRevision, 'hash': remoteHash};
-            FileManager.broadcastFileWrite(FileOperationType.write, path);
-          case YcSyncAction.deleteLocal:
-            if (editing || await _hash(file) != local[path]) {
-              message = '筆記正在修改，稍後繼續同步。';
-              return;
-            }
-            if (file.existsSync()) await file.delete();
-            base[path] = {'revision': remoteRevision, 'hash': null};
-            FileManager.broadcastFileWrite(FileOperationType.delete, path);
-          case YcSyncAction.none:
-            base[path] = {'revision': remoteRevision, 'hash': remoteHash};
-          case YcSyncAction.conflict:
-            throw StateError('Unresolved conflict');
+        final nextBase = Map<String, dynamic>.from(base);
+        for (final entry in actions.entries) {
+          if ([
+            YcSyncAction.upload,
+            YcSyncAction.deleteRemote,
+          ].contains(entry.value))
+            continue;
+          final r = remote[entry.key];
+          if (r == null) {
+            nextBase.remove(entry.key);
+          } else {
+            nextBase[entry.key] = _baseline(r);
+          }
         }
-        await saveState();
+        final source = File(p.join(working.path, 'state'));
+        await _writeJson(source, nextBase);
+        await batch.apply({
+          ...incoming,
+          YcLocalBatch.statePath: source,
+        }, onProgress: (_) => requireAccount());
+        for (final path in incoming.keys) {
+          FileManager.broadcastFileWrite(
+            incoming[path] == null
+                ? FileOperationType.delete
+                : FileOperationType.write,
+            path,
+          );
+        }
+        return true;
+      });
+      if (!applied) {
+        message = '筆記正在修改，稍後繼續同步。';
+        return;
       }
       lastSuccess = DateTime.now();
       message = skippedReadOnlyEdits
           ? '唯讀，本機變更尚未上傳'
-          : backupPath == null
+          : backupCreated
+          ? '已同步；衝突副本已保留'
+          : pdfsReady
           ? '已同步'
-          : '衝突副本：$backupPath';
+          : '已同步；PDF 待更新';
     } on YcApiException catch (e) {
-      message = e.status == 409 ? '其他裝置剛更新了筆記，下次同步會保留衝突副本。' : e.message;
-      if (e.status == 401 || e.status == 403) await ycAccount.refresh();
+      message = e.status == 409 ? '其他裝置已更新，稍後重新同步。' : e.message;
+      if (e.status == 401 || e.status == 403) await _refreshAccount();
     } on SocketException {
       message = '目前離線，筆記已保留在本機。';
     } on TimeoutException {
       message = '連線逾時，筆記已保留在本機。';
-    } catch (e) {
-      message = '同步未完成：$e';
+    } catch (_) {
+      message = '同步未完成，筆記已保留在本機。';
     } finally {
-      api.client.close();
+      if (workspace?.existsSync() ?? false)
+        await workspace!.delete(recursive: true);
+      api?.client.close();
       notifyListeners();
     }
   }
 
-  static bool _validPath(String path) {
-    if (!path.startsWith('/') ||
-        path.contains('\\') ||
-        path.contains(RegExp(r'[\x00-\x1f\x7f]')))
-      return false;
-    return path
-            .substring(1)
-            .split('/')
-            .every((s) => s.isNotEmpty && !s.startsWith('.')) &&
-        !path.endsWith('.yc-download');
-  }
+  static bool _incoming(YcSyncAction action) =>
+      action == YcSyncAction.download || action == YcSyncAction.deleteLocal;
 
-  Future<String> _backup(String root) async {
-    final name =
-        '同步衝突備份/${DateTime.now().toUtc().toIso8601String().replaceAll(':', '-')}';
-    final sources = await Directory(root)
-        .list(recursive: true, followLinks: false)
-        .where(
-          (e) =>
-              e is File &&
-              !p
-                  .relative(e.path, from: root)
-                  .startsWith('同步衝突備份${p.separator}'),
-        )
-        .cast<File>()
-        .toList();
-    for (final file in sources) {
-      final relative = p.relative(file.path, from: root);
-      final target = File(p.join(root, name, relative));
-      await target.parent.create(recursive: true);
-      await file.copy(target.path);
+  Future<void> _backup(String root, Map<String, String> local) async {
+    final directory = await Directory(p.join(root, '.yc-conflicts'))
+        .create(recursive: true);
+    final temporary = await directory.createTemp('pending-');
+    try {
+      for (final path in local.keys) {
+        final target = _file(temporary.path, path);
+        await target.parent.create(recursive: true);
+        await _file(root, path).copy(target.path);
+        final handle = await target.open(mode: FileMode.append);
+        try {
+          await handle.flush();
+        } finally {
+          await handle.close();
+        }
+      }
+      await temporary.rename(p.join(directory.path, _id()));
+    } catch (_) {
+      await temporary.delete(recursive: true);
+      rethrow;
     }
-    return name;
   }
 
   @override

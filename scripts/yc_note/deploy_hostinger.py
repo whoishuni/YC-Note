@@ -31,7 +31,7 @@ try:
     if status!=201: raise RuntimeError('Unexpected upload creation status '+str(status))
     status,_=send(target,'PATCH',source,{**auth,'Content-Type':'application/offset+octet-stream'})
     if status!=204: raise RuntimeError('Unexpected upload status '+str(status))
-    paths=['src/bootstrap.php','src/Service.php','src/SecurityBridge.php','public/index.php','public/api.php','public/boot.php','public/style.css','public/icon.svg','public/.htaccess']
+    paths=['src/bootstrap.php','src/Service.php','src/SyncTransactions.php','src/Notebooks.php','src/SecurityBridge.php','public/index.php','public/api.php','public/boot.php','public/style.css','public/icon.svg','public/.htaccess']
     rental=Path(data['rental_root']).resolve()
     native=['admin/notes.php','includes/YcNoteModule.php','includes/yc_note_view.php','assets/css/yc-note.css','yc_note/api.php']
     patches=json.loads((ROOT/'scripts/yc_note/rental-patches.json').read_text())

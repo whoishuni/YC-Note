@@ -21,13 +21,14 @@ try {
     if (($data['action']??'')==='cleanup') { unlink(__FILE__); echo '{"removed":true}'; exit; }
     $docroot=__DIR__;
     if ($docroot!=='/home/u805049489/domains/yckuo.com/public_html') throw new RuntimeException('unexpected_root');
+    if (!class_exists(ZipArchive::class)) throw new RuntimeException('zip_unavailable');
     $root='/home/u805049489/yc-note';
     $public=$docroot.'/yc_note';
     if (is_dir($public)&&!is_file($root.'/.yc-note')) throw new RuntimeException('destination_not_owned');
     if (!is_dir($root)&&!mkdir($root,0700,true)) throw new RuntimeException('private_directory');
     chmod($root,0700);
     if (!is_file($root.'/.yc-note')) file_put_contents($root.'/.yc-note','YC Note deployment');
-    $allowed=['src/bootstrap.php','src/Service.php','src/SecurityBridge.php','public/index.php','public/api.php','public/boot.php','public/style.css','public/icon.svg','public/.htaccess'];
+    $allowed=['src/bootstrap.php','src/Service.php','src/SyncTransactions.php','src/Notebooks.php','src/SecurityBridge.php','public/index.php','public/api.php','public/boot.php','public/style.css','public/icon.svg','public/.htaccess'];
     $release=$root.'/releases/'.gmdate('YmdHis').'-'.bin2hex(random_bytes(4));
     mkdir($release,0700,true);
     foreach ($allowed as $relative) {

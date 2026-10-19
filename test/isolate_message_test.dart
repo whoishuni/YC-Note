@@ -16,7 +16,7 @@ void main() {
     FlavorConfig.setup();
 
     test('Empty EditorCoreInfo', () async {
-      final coreInfo = EditorCoreInfo.placeholder;
+      final coreInfo = EditorCoreInfo.placeholder();
       await compute((EditorCoreInfo coreInfo) => coreInfo, coreInfo);
     });
 

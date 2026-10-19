@@ -23,7 +23,7 @@
 
 ## 帳號與資料庫
 
-YC Note 保留 9 張表：owners、devices、tokens、files、revisions、audit、rate_limits、note_accounts、access_rules。note_accounts 僅保留歷史資料，不再登入或新增。
+YC Note 保留 11 張表：owners、devices、tokens、files、revisions、audit、rate_limits、note_accounts、access_rules、sync_staging、sync_commits。note_accounts 僅保留歷史資料，不再登入或新增。
 
 租屋 `users` 為唯一帳號來源。`super_admin` 預設開放；`admin`／歷史 `manager` 需在筆記權限頁授權。租客不可開放，代登入也不能看私人筆記。筆記權限不改動租屋角色；新增／刪除使用者沿用租屋原生安全流程。
 
@@ -43,6 +43,16 @@ python3 scripts/yc_note/build_server_bundle.py --rental-root /absolute/path/Rent
 
 套件內有公開新檔、私有核心與租屋修補檔；不包含正式憑證。保留既有 blobs、config.local.php 與歷史資料。完整備份需同時涵蓋 SQL、blobs 與設定；目前沒有自動刪除歷史版本工作，歷史版會計入配額。完整還原演練仍待完成。
 
+## 筆記與 PDF
+
+網站以整本筆記呈現，附件不獨立列出。原稿下載為 SBA，包含主檔及所有編號附件，封面與生成的 PDF 不加入原稿壓縮檔。匯出暫存放在私有 exports，請求結束清除；突然中止 PHP 程序留下的匯出暫存仍需維運清理。
+
+PDF 由更新後的 App 在列表同步時預先生成，網站不直接執行 Flutter 筆跡轉換。`.sbn2.pdf.json` 記錄完整原稿與編號附件雜湊及 PDF 雜湊，符合目前版本才可預覽／下載；PDF 尚未生成或失效時顯示「PDF 待更新」。下載仍重新驗證所有權與內容完整性，不接受跨帳號參數。
+
+`stage` 上傳不更動可見筆記，`commit` 以帳號快照與各檔基準版本比對後，單次交易發布所有修改並保留收據 7 天。待提交內容保留約 24 小時；未使用收據過期後仍依內容與版本重新同步。帳號首次採用原子同步後，舊逐檔寫入回覆 426，其他裝置須更新 App。
+
+本機 `.yc-local-batch` 先保存修改前後內容，再發布整批原稿／附件／基準。啟動先恢復日誌；隱藏日誌、暫存與衝突備份不出現在一般筆記列表。伺服器原子提交與整本歷史還原不同，目前歷史頁仍列主檔版本。
+
 ## 裝置與登入
 
 App 首次人工核准；已核准且未過期的登入成功驗證後延至 90 天後，無需定期人工核准。90 天無成功驗證則需重新登入，原安裝的裝置核准保留。修改密碼、角色、封鎖、撤銷或移除筆記存取權會使既有憑證失效。原生網站 Session 保留租屋系統的逾期規則。
@@ -51,7 +61,7 @@ App 首次人工核准；已核准且未過期的登入成功驗證後延至 90 
 
 ## iPad
 
-目前已安裝並啟動。原生依賴採 CocoaPods，先 flutter pub get，再於 ios/ 執行 pod install；Rust 需 1.97.1 與 aarch64-apple-ios target。iOS bundle ID 為 com.yckuo.ycnote。Flutter/Dart 仍須 Apple Xcode 編譯簽署。
+PDF 功能版已更新安裝，最新 PDF 同步仍待實機驗證；已配對的 iPad 可經 localNetwork 無線安裝。原生依賴採 CocoaPods，先 flutter pub get，再於 ios/ 執行 pod install；Rust 需 1.97.1 與 aarch64-apple-ios target。iOS bundle ID 為 com.yckuo.ycnote。Flutter/Dart 仍須 Apple Xcode 編譯簽署。
 
 免費 Personal Team 安裝簽署為 7 天；付費 Apple Developer 年費 US$99，地方售價以申請畫面為準，可使用較長效期的裝置簽署且不必上架。實際到期時間依簽發 profile 確認，網站不能延長 Apple 簽章效期。
 

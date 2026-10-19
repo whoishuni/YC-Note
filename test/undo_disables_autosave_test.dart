@@ -24,10 +24,14 @@ void main() {
     tearDown(() => editorState.cancelAutosaveAndMarkSaved());
 
     testWidgets('draw then undo', (tester) async {
-      await tester.pumpWidget(
-        TranslationProvider(child: MaterialApp(home: Editor())),
-      );
-      editorState = tester.state<EditorState>(find.byType(Editor));
+      await tester.runAsync(() async {
+        await tester.pumpWidget(
+          TranslationProvider(child: MaterialApp(home: Editor())),
+        );
+        editorState = tester.state<EditorState>(find.byType(Editor));
+        await editorState.initialized;
+      });
+      await tester.pumpAndSettle();
       expect(editorState.coreInfo.readOnly, isFalse);
 
       SavingState getSavingState() => tester
@@ -58,13 +62,22 @@ void main() {
         SavingState.saved,
         reason: 'Saving state should be "saved" after undoing the change',
       );
+      editorState.cancelAutosaveAndMarkSaved();
+      await tester.runAsync(() async {
+        await tester.pumpWidget(const SizedBox());
+        await editorState.closed;
+      });
     });
 
     testWidgets('draw then save then undo', (tester) async {
-      await tester.pumpWidget(
-        TranslationProvider(child: MaterialApp(home: Editor())),
-      );
-      editorState = tester.state<EditorState>(find.byType(Editor));
+      await tester.runAsync(() async {
+        await tester.pumpWidget(
+          TranslationProvider(child: MaterialApp(home: Editor())),
+        );
+        editorState = tester.state<EditorState>(find.byType(Editor));
+        await editorState.initialized;
+      });
+      await tester.pumpAndSettle();
       expect(editorState.coreInfo.readOnly, isFalse);
 
       SavingState getSavingState() => tester
@@ -102,6 +115,11 @@ void main() {
         reason:
             'Saving state should be "waitingToSave" since different to saved',
       );
+      editorState.cancelAutosaveAndMarkSaved();
+      await tester.runAsync(() async {
+        await tester.pumpWidget(const SizedBox());
+        await editorState.closed;
+      });
     });
   });
 }

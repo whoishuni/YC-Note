@@ -1,0 +1,100 @@
+<?php
+declare(strict_types=1);
+require dirname(__DIR__).'/src/Service.php';
+use YcNote\Service;
+use YcNote\ApiError;
+
+$dir=sys_get_temp_dir().'/yc-atomic-'.bin2hex(random_bytes(6));mkdir($dir,0700);
+$dsn=getenv('YC_ATOMIC_TEST_DSN')?:'sqlite:'.$dir.'/test.sqlite';
+if (!str_starts_with($dsn,'sqlite:') && !str_contains($dsn,'dbname=yc_note_atomic_test;')) throw new RuntimeException('Only the disposable atomic test database is allowed');
+$db=new PDO($dsn,getenv('YC_TEST_DB_USER')?:null,getenv('YC_TEST_DB_PASSWORD')?:null,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC,PDO::ATTR_EMULATE_PREPARES=>false]);
+$db->exec('CREATE TABLE users (id BIGINT PRIMARY KEY,name VARCHAR(100),password VARCHAR(255),type VARCHAR(32),is_banned INTEGER DEFAULT 0,first_login INTEGER DEFAULT 0)');
+$password='Disposable-Fixture-2026!';$passwordHash=password_hash($password,PASSWORD_BCRYPT,['cost'=>4]);
+$q=$db->prepare('INSERT INTO users (id,name,password,type) VALUES (?,?,?,?)');
+$q->execute([1,'root',$passwordHash,'super_admin']);$q->execute([2,'writer',$passwordHash,'admin']);
+$config=['identity_table'=>'users','storage_path'=>$dir.'/blobs','max_file_bytes'=>1024,'quota_bytes'=>65536,'token_lifetime_seconds'=>3600,'offline_lease_seconds'=>86400];
+$s=new Service($db,$db,$config);$s->migrate();$s->migrate();
+$checks=0;
+function ok(bool $v,string $label):void {global $checks;if(!$v)throw new RuntimeException($label);$checks++;}
+function denied(int $status,callable $f,string $label):void {try{$f();}catch(ApiError $e){ok($e->status===$status,$label.' status '.$e->status);return;}throw new RuntimeException('Not rejected: '.$label);}
+function change(string $path,string $bytes,int $base=0):array {return ['path'=>$path,'base_revision'=>$base,'blob_hash'=>hash('sha256',$bytes),'size'=>strlen($bytes),'deleted'=>false];}
+function stage(Service $s,array $actor,array $change,string $bytes):void {$s->stageSync($actor,$change['path'],$change['blob_hash'],$bytes);}
+function total(PDO $db,string $table):int {return (int)$db->query('SELECT COUNT(*) FROM '.$table)->fetchColumn();}
+$a=$s->enroll('root',$password,str_repeat('a',64),'Root iPad','ios');
+denied(403,fn()=>$s->stageSync($s->authenticate($a['token'],false),'/pending',hash('sha256','x'),'x'),'pending device cannot stage');
+$s->setDeviceStatus(1,$a['device_id'],'approved');$actor=$s->authenticate($a['token']);
+$s->setAccess(1,2,true);$w=$s->enroll('writer',$password,str_repeat('b',64),'Writer iPad','ios');$s->setDeviceStatus(1,$w['device_id'],'approved');$writer=$s->authenticate($w['token']);
+$initial=$s->snapshot(1);ok($initial['files']===[],'empty initial manifest');
+$note=change('/課堂/筆記.sbn2','notebook-v1');$asset=change('/課堂/筆記.sbn2.0','pdf-image-v1');
+denied(422,fn()=>$s->stageSync($actor,$note['path'],str_repeat('0',64),'notebook-v1'),'stage checks content digest');
+denied(422,fn()=>$s->stageSync($actor,'/../outside',$note['blob_hash'],'notebook-v1'),'stage rejects traversal');
+denied(413,fn()=>$s->stageSync($actor,'/large',hash('sha256',str_repeat('x',1025)),str_repeat('x',1025)),'stage file bound');
+stage($s,$actor,$note,'notebook-v1');stage($s,$actor,$note,'notebook-v1');
+ok(total($db,'sync_staging')===1,'repeat transfer is idempotent');
+ok($s->snapshot(1)===$initial && total($db,'revisions')===0,'staging never changes visible notebook or history');
+denied(422,fn()=>$s->commitSync($actor,str_repeat('1',64),$initial['snapshot'],[$note,$asset]),'missing attachment prevents whole publication');
+ok($s->snapshot(1)===$initial && total($db,'sync_commits')===0,'missing attachment publishes no receipt or head');
+stage($s,$actor,$asset,'pdf-image-v1');
+denied(422,fn()=>$s->commitSync($actor,str_repeat('1',64),$initial['snapshot'],[$note,$note]),'duplicate paths rejected');
+denied(422,fn()=>$s->commitSync($actor,str_repeat('1',64),$initial['snapshot'],[]),'empty commits cannot create receipts');
+denied(409,fn()=>$s->commitSync($actor,str_repeat('1',64),str_repeat('0',64),[$note,$asset]),'stale account snapshot rejected');
+$commit=$s->commitSync($actor,str_repeat('1',64),$initial['snapshot'],[$note,$asset]);
+ok(count($s->manifest(1))===2 && count($commit['files'])===2,'notebook and attachment published together');
+ok(file_get_contents($s->download(1,$note['path'])['file'])==='notebook-v1','published notebook bytes');
+ok(file_get_contents($s->download(1,$asset['path'])['file'])==='pdf-image-v1','published attachment bytes');
+ok(total($db,'sync_staging')===0 && total($db,'revisions')===2,'committed stages consumed, both histories retained');
+ok($s->commitSync($actor,str_repeat('1',64),$initial['snapshot'],[$note,$asset])===$commit && total($db,'revisions')===2,'lost acknowledgement retries original outcome without another revision');
+denied(409,fn()=>$s->commitSync($actor,str_repeat('1',64),$initial['snapshot'],[$note]),'receipt cannot authorize a changed request');
+denied(422,fn()=>$s->commitSync($writer,str_repeat('1',64),$s->snapshot(2)['snapshot'],[$note,$asset]),'another owner cannot claim staged bytes or receipt');
+ok($s->manifest(2)===[],'cross-account publication rejected without changes');
+denied(426,fn()=>$s->write($actor,$note['path'],1,'old-client-v2'),'legacy file writes stop after atomic protocol adoption');
+$s->write($writer,'/legacy.sbn2',0,'old format client');
+ok(count($s->manifest(2))===1,'legacy writes still work before account opts into atomic sync');
+$other=$s->enroll('root',$password,str_repeat('c',64),'Root Mac','macos');$s->setDeviceStatus(1,$other['device_id'],'approved');$otherActor=$s->authenticate($other['token']);
+$n2=change($note['path'],'notebook-v2',1);$a2=change($asset['path'],'pdf-image-v2',1);
+stage($s,$actor,$n2,'notebook-v2');stage($s,$actor,$a2,'pdf-image-v2');
+$snapshot=$s->snapshot(1);
+$hash=hash('sha256',$asset['path']);$sqlite=$db->getAttribute(PDO::ATTR_DRIVER_NAME)==='sqlite';
+$db->exec($sqlite?"CREATE TRIGGER fail_asset BEFORE INSERT ON revisions WHEN NEW.path_hash='$hash' BEGIN SELECT RAISE(ABORT,'fixture failure'); END":"CREATE TRIGGER fail_asset BEFORE INSERT ON revisions FOR EACH ROW BEGIN IF NEW.path_hash='$hash' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='fixture failure'; END IF; END");
+try {$s->commitSync($actor,str_repeat('2',64),$snapshot['snapshot'],[$n2,$a2]);throw new RuntimeException('Injected fault did not fail');}catch(PDOException){ok(true,'second file SQL fault surfaces');}
+ok($s->snapshot(1)===$snapshot && total($db,'sync_commits')===1 && total($db,'sync_staging')===2,'second file fault rolls back first head, history, receipt and stage removal');
+ok(file_get_contents($s->download(1,$note['path'])['file'])==='notebook-v1','failed batch leaves prior complete notebook');
+$db->exec('DROP TRIGGER fail_asset');
+$second=$s->commitSync($actor,str_repeat('2',64),$snapshot['snapshot'],[$n2,$a2]);
+ok($second['files'][0]['revision']===2 && $second['files'][1]['revision']===2,'failed batch can safely retry the same commit identifier');
+denied(409,fn()=>$s->commitSync($otherActor,str_repeat('3',64),$snapshot['snapshot'],[$n2,$a2]),'concurrent device cannot publish stale snapshot');
+ok(file_get_contents($s->download(1,$note['path'],1)['file'])==='notebook-v1','whole batch retains previous notebook revision');
+// Entire deletion is another atomic snapshot, retaining downloadable prior bytes.
+$deletions=array_map(fn($c)=>['path'=>$c['path'],'base_revision'=>2,'blob_hash'=>null,'size'=>0,'deleted'=>true],[$n2,$a2]);
+$deleted=$s->commitSync($actor,str_repeat('4',64),$second['snapshot'],$deletions);
+ok(count(array_filter($s->manifest(1),fn($f)=>$f['deleted']===1))===2,'notebook and attachment deleted together');
+ok(file_get_contents($s->download(1,$asset['path'],2)['file'])==='pdf-image-v2','deleted attachment version retained');
+$wc=change('/writer.sbn2','writer content');stage($s,$writer,$wc,'writer content');$ws=$s->snapshot(2);
+$s->setAccess(1,2,false);
+denied(403,fn()=>stage($s,$writer,$wc,'writer content'),'downgraded writer cannot transfer');
+denied(403,fn()=>$s->commitSync($writer,str_repeat('5',64),$ws['snapshot'],[$wc]),'downgraded writer cannot publish already transferred bytes');
+ok($s->snapshot(2)===$ws,'read-only transition leaves published data intact');
+$s->setAccess(1,2,true);$s->setDeviceStatus(1,$w['device_id'],'revoked');
+denied(403,fn()=>$s->commitSync($writer,str_repeat('5',64),$ws['snapshot'],[$wc]),'revocation prevents in-flight publication');
+$s->setDeviceStatus(1,$w['device_id'],'approved');$w=$s->enroll('writer',$password,str_repeat('b',64),'Writer iPad','ios');$writer=$s->authenticate($w['token']);
+$q=$db->prepare('UPDATE users SET password=? WHERE id=2');$q->execute([password_hash('Changed-fixture',PASSWORD_BCRYPT,['cost'=>4])]);
+denied(401,fn()=>$s->commitSync($writer,str_repeat('5',64),$ws['snapshot'],[$wc]),'password change invalidates already staged commit');$q->execute([$passwordHash]);
+$s->logout($w['token']);
+denied(401,fn()=>$s->commitSync($writer,str_repeat('5',64),$ws['snapshot'],[$wc]),'logout prevents held actor from committing');
+$small=new Service($db,$db,array_replace($config,['quota_bytes'=>1]));
+denied(507,fn()=>stage($small,$actor,change('/quota','x'),'x'),'transfer reservation respects history quota');
+$broken=change('/corrupt.sbn2','unique-corrupt-fixture');stage($s,$actor,$broken,'unique-corrupt-fixture');
+file_put_contents($config['storage_path'].'/1/'.$broken['blob_hash'],'disk corruption');$before=$s->snapshot(1);
+denied(422,fn()=>$s->commitSync($actor,str_repeat('6',64),$before['snapshot'],[$broken]),'checksum mismatch blocks whole publication');
+ok($s->snapshot(1)===$before,'corrupt transferred content never becomes visible');
+stage($s,$actor,$broken,'unique-corrupt-fixture');
+$s->commitSync($actor,str_repeat('6',64),$before['snapshot'],[$broken]);
+ok(file_get_contents($s->download(1,$broken['path'])['file'])==='unique-corrupt-fixture','resending verified bytes repairs transfer and allows retry');
+$unused=change('/expired.sbn2','expired-unused-fixture');stage($s,$actor,$unused,'expired-unused-fixture');
+$historical=change('/expired-other-name.sbn2','notebook-v1');stage($s,$actor,$historical,'notebook-v1');
+$db->exec('UPDATE sync_staging SET created_at='.(time()-86401).' WHERE user_id=1');
+stage($s,$actor,change('/new.sbn2','new fixture'),'new fixture');
+ok(!is_file($config['storage_path'].'/1/'.$unused['blob_hash']),'expired unreferenced transfer bytes are cleaned');
+ok(is_file($config['storage_path'].'/1/'.$note['blob_hash']),'cleanup preserves a blob referenced by any retained version');
+ok(file_get_contents($s->download(1,$note['path'],1)['file'])==='notebook-v1','cleanup cannot erase historical notebook content');
+echo "PASS: $checks atomic sync checks (".$db->getAttribute(PDO::ATTR_DRIVER_NAME).")\n";

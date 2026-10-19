@@ -58,7 +58,9 @@ class EditorCoreInfo {
 
   /// Whether the note is read-only.
   /// See [readOnlyReason] for the reason.
-  bool get readOnly => readOnlyReason != null || ycAccount.isReadOnly;
+  var accountDetached = false;
+  bool get readOnly =>
+      accountDetached || readOnlyReason != null || ycAccount.isReadOnly;
 
   String filePath;
 
@@ -76,7 +78,7 @@ class EditorCoreInfo {
   /// Stores the current page index so that it can be restored when the file is reloaded.
   int? initialPageIndex;
 
-  static final placeholder =
+  factory placeholder() =>
       EditorCoreInfo._(
         filePath: '',
         readOnlyReason: .placeholder,
@@ -406,6 +408,7 @@ class EditorCoreInfo {
             await FileManager.init(
               documentsDirectory: documentsDirectory,
               shouldWatchRootDirectory: false,
+              recoverTransactions: false,
             );
             StrokeOptionsExtension.setDefaults();
             return isolate();
@@ -556,6 +559,6 @@ class EditorCoreInfo {
       pages: pages ?? this.pages,
       initialPageIndex: initialPageIndex,
       assetCache: assetCache,
-    );
+    )..accountDetached = accountDetached;
   }
 }
