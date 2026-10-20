@@ -23,7 +23,7 @@ with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as archive:
     archive.write(ROOT/'server/config.example.php','private/yc-note-server/config.example.php')
     archive.write(ROOT/'server/sql/identity-view.example.sql','private/yc-note-server/sql/identity-view.example.sql')
     archive.write(ROOT/'docs/DEPLOYMENT.md','DEPLOYMENT.md')
-    for name in ['admin/notes.php','includes/YcNoteModule.php','includes/yc_note_view.php','assets/css/yc-note.css','yc_note/api.php']:
+    for name in ['admin/notes_connect.php','yc_note/saber.php','yc_note/saber/index.php','yc_note/saber/remote.php','yc_note/saber/status.php','yc_note/saber/ocs/v1.php','yc_note/saber/ocs/v2.php','yc_note/saber/.htaccess','admin/notes.php','includes/YcNoteModule.php','includes/yc_note_view.php','assets/css/yc-note.css','yc_note/api.php']:
         path=args.rental_root/name
         target='public_html/rent/'+name
         archive.write(path,target);manifest[target]=hashlib.sha256(path.read_bytes()).hexdigest()

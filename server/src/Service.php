@@ -9,6 +9,7 @@ use Throwable;
 require_once __DIR__.'/SyncTransactions.php';
 require_once __DIR__.'/Notebooks.php';
 require_once __DIR__.'/NotebookVersions.php';
+require_once __DIR__.'/SaberCloud.php';
 
 final class ApiError extends RuntimeException
 {
@@ -20,7 +21,8 @@ final class Service
     use SyncTransactions;
     use Notebooks;
     use NotebookVersions;
-    public const INTEGRATION_VERSION = 4;
+    use SaberCloud;
+    public const INTEGRATION_VERSION = 5;
     public function __construct(public readonly PDO $db, private PDO $identity, public readonly array $config) {}
 
     private function query(string $sql, array $params = []): array
@@ -50,6 +52,7 @@ final class Service
         }
         $this->migrateSync();
         $this->migrateNotebookVersions();
+        $this->migrateSaber();
     }
 
     private function audit(int $actor, string $action, array $detail): void
@@ -190,7 +193,10 @@ final class Service
             $existing = $this->query('SELECT user_id FROM access_rules WHERE user_id=?', [$target]);
             if ($existing) $this->query('UPDATE access_rules SET can_write=?,removed=?,updated_at=? WHERE user_id=?', [(int)$canWrite,(int)$removed,time(),$target]);
             else $this->query('INSERT INTO access_rules (can_write,removed,updated_at,user_id) VALUES (?,?,?,?)', [(int)$canWrite,(int)$removed,time(),$target]);
-            if ($removed || $role !== null) $this->query('DELETE FROM tokens WHERE user_id=?', [$target]);
+            if ($removed || $role !== null) {
+                $this->query('DELETE FROM tokens WHERE user_id=?', [$target]);
+                $this->forgetSaberCredentials($target);
+            }
             $this->audit($adminId, $removed ? 'user.removed' : 'user.permissions', ['user_id'=>$target,'can_write'=>$canWrite,'role'=>$role]);
             $this->db->commit();
         } catch (Throwable $e) { $this->db->rollBack(); throw $e; }
@@ -272,6 +278,7 @@ final class Service
             if (!$device) throw new ApiError(404, '找不到裝置。');
             $this->query("UPDATE devices SET status='revoked' WHERE id=? AND user_id=?", [$id,$uid]);
             $this->query('DELETE FROM tokens WHERE device_id=?', [$id]);
+            $this->forgetSaberCredentials($uid,$id);
             $this->audit($uid,'device.revoked',['device_id'=>$id,'user_id'=>$uid]);
             $this->db->commit();
         } catch (Throwable $e) { $this->db->rollBack(); throw $e; }
@@ -287,7 +294,7 @@ final class Service
         $this->rentalUser($uid);
         $head=$this->query('SELECT COUNT(*) AS files,COALESCE(SUM(size),0) AS bytes FROM files WHERE user_id=? AND deleted=0',[$uid])[0];
         $versions=$this->query('SELECT COUNT(*) AS versions,COALESCE(SUM(size),0) AS bytes FROM revisions WHERE user_id=?',[$uid])[0];
-        return ['files'=>(int)$head['files'],'bytes'=>(int)$head['bytes'],'versions'=>(int)$versions['versions'],'retained_bytes'=>(int)$versions['bytes'],'notebook_versions'=>(int)$this->query('SELECT COUNT(*) AS n FROM notebook_versions WHERE user_id=?',[$uid])[0]['n'],'quota_bytes'=>(int)$this->config['quota_bytes']];
+        return ['files'=>(int)$head['files'],'bytes'=>(int)$head['bytes'],'versions'=>(int)$versions['versions'],'retained_bytes'=>$this->totalRetainedBytes($uid),'notebook_versions'=>(int)$this->query('SELECT COUNT(*) AS n FROM notebook_versions WHERE user_id=?',[$uid])[0]['n'],'quota_bytes'=>(int)$this->config['quota_bytes']];
     }
 
     public function setDeviceStatus(int $adminId, string $id, string $status): void
@@ -301,7 +308,10 @@ final class Service
             $this->lockOwner((int) $device['user_id']);
             if ($status === 'approved') $this->rentalUser((int)$device['user_id']);
             $this->query('UPDATE devices SET status=? WHERE id=?', [$status, $id]);
-            if ($status === 'revoked') $this->query('DELETE FROM tokens WHERE device_id=?', [$id]);
+            if ($status === 'revoked') {
+                $this->query('DELETE FROM tokens WHERE device_id=?', [$id]);
+                $this->forgetSaberCredentials((int)$device['user_id'],$id);
+            }
             $this->audit($adminId, 'device.' . $status, ['device_id' => $id, 'user_id' => (int) $device['user_id']]);
             $this->db->commit();
         } catch (Throwable $e) { $this->db->rollBack(); throw $e; }
@@ -354,7 +364,7 @@ final class Service
             $old = $this->query('SELECT * FROM files WHERE user_id=? AND path_hash=?', [$uid, $pathHash])[0] ?? null;
             if ((int) ($old['revision'] ?? 0) !== $baseRevision) throw new ApiError(409, '此筆記已被其他裝置更新，請先同步。');
             $size = $bytes === null ? 0 : strlen($bytes);
-            $used = (int) $this->query('SELECT COALESCE(SUM(size),0) AS n FROM revisions WHERE user_id=?', [$uid])[0]['n'];
+            $used = $this->totalRetainedBytes($uid);
             if ($used + $size > $this->config['quota_bytes']) throw new ApiError(507, '儲存空間不足，請聯絡管理者。');
             $hash = $bytes === null ? null : hash('sha256', $bytes);
             if ($hash !== null) {

@@ -32,14 +32,13 @@ try:
     if status!=201: raise RuntimeError('Unexpected upload creation status '+str(status))
     status,_=send(target,'PATCH',source,{**auth,'Content-Type':'application/offset+octet-stream'})
     if status!=204: raise RuntimeError('Unexpected upload status '+str(status))
-    paths=['src/bootstrap.php','src/Service.php','src/SyncTransactions.php','src/NotebookVersions.php','src/Notebooks.php','src/SecurityBridge.php','public/index.php','public/api.php','public/boot.php','public/style.css','public/icon.svg','public/.htaccess']
+    paths=['src/SaberCloud.php','public/saber.php','public/avatar.png','src/bootstrap.php','src/Service.php','src/SyncTransactions.php','src/NotebookVersions.php','src/Notebooks.php','src/SecurityBridge.php','public/index.php','public/api.php','public/boot.php','public/style.css','public/icon.svg','public/.htaccess']
     rental=Path(data['rental_root']).resolve()
-    native=['admin/notes.php','includes/YcNoteModule.php','includes/yc_note_view.php','assets/css/yc-note.css','yc_note/api.php']
+    native=['admin/notes_connect.php','yc_note/saber.php','yc_note/saber/index.php','yc_note/saber/remote.php','yc_note/saber/status.php','yc_note/saber/ocs/v1.php','yc_note/saber/ocs/v2.php','yc_note/saber/.htaccess','admin/notes.php','includes/YcNoteModule.php','includes/yc_note_view.php','assets/css/yc-note.css','yc_note/api.php']
     patches=json.loads((ROOT/'scripts/yc_note/rental-patches.json').read_text())
     for name,edits in patches.items():
         source=(rental/name).read_bytes()
-        for edit in edits:
-            if edit['after'].encode() not in source:raise RuntimeError('Rental source does not match integration patch')
+        if edits[-1]['after'].encode() not in source:raise RuntimeError('Rental source does not match integration patch')
     patches={name:[{k:base64.b64encode(v.encode()).decode() for k,v in edit.items()} for edit in edits] for name,edits in patches.items()}
     payload={'db_password':data['db_password'],'files':{p:base64.b64encode((ROOT/'server'/p).read_bytes()).decode() for p in paths},'rental_files':{p:base64.b64encode((rental/p).read_bytes()).decode() for p in native},'rental_patches':patches}
     status,body=send(installer,'POST',json.dumps(payload).encode(),{'Content-Type':'application/json','X-YC-Install':token})

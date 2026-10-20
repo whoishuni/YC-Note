@@ -1,6 +1,8 @@
 # YC Note
 
-YC Note 是由 [Saber](https://github.com/saber-notes/saber) fork 的 Flutter/Dart 手寫筆記 App，使用自有伺服器與裝置認證，不含 AI 功能。
+YC Note 深度整合租屋系統的帳號、權限與私人筆記儲存。iPad 目前改用 [Saber 官方 App Store 版](https://apps.apple.com/app/id1671523739)，以相容登入與同步協定連入自有後台，無需自行每週簽署。
+
+本 repo 保留由 [Saber](https://github.com/saber-notes/saber) fork 的原 YC Note Flutter/Dart 客戶端、格式與既有筆記；其本機唯讀、原子同步及網站 PDF 功能屬於自訂客戶端，不能視為官方版已有相同功能。自訂程式不新增 AI。
 
 ![YC Note](assets/icon/resized/icon-128x128.png)
 
@@ -11,7 +13,9 @@ YC Note 是由 [Saber](https://github.com/saber-notes/saber) fork 的 Flutter/Da
 - 私有筆記儲存、歷史版本、檔案同步與衝突備份。
 - 原生管理頁、共用資安與維護模式，私有資料庫與檔案儲存。
 
-建置需 Flutter 3.47.7 / Dart 3.13.5；iOS 編譯與簽署另需 Xcode。Dart 內部 package 名稱保留 `saber`，筆記格式保留 `.sbn2/.sba`。
+官方 Saber 的「其他 Nextcloud 伺服器」填入 `https://yckuo.com/rent/yc_note/saber`，由租屋網頁核准連線；雲端可唯讀或撤銷，官方 App 的本機編輯不受遠端限制。密文與加密設定以原樣儲存，網站可下載加密備份；PDF 目前在 Saber 匯出。
+
+以下為保留的自訂客戶端建置方式，建置需 Flutter 3.47.7 / Dart 3.13.5；iOS 編譯與簽署另需 Xcode。Dart 內部 package 名稱保留 `saber`，筆記格式保留 `.sbn2/.sba`。
 
 ```sh
 flutter pub get

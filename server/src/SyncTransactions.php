@@ -77,7 +77,7 @@ trait SyncTransactions
             $staged=$this->query('SELECT blob_hash,MAX(size) AS size FROM sync_staging WHERE user_id=? GROUP BY blob_hash',[$uid]);
             $reserved=array_sum(array_column($staged,'size'));
             $additional=in_array($hash,array_column($staged,'blob_hash'),true)?0:$size;
-            $used=(int)$this->query('SELECT COALESCE(SUM(size),0) AS n FROM revisions WHERE user_id=?',[$uid])[0]['n'];
+            $used=$this->totalRetainedBytes($uid);
             if ($used+$reserved+$additional>$this->config['quota_bytes']) throw new ApiError(507,'儲存空間不足，請聯絡管理者。');
             $key=[$uid,$actor['device_id'],hash('sha256',$path),$hash];
             $existing=$this->query('SELECT 1 FROM sync_staging WHERE user_id=? AND device_id=? AND path_hash=? AND blob_hash=?',$key);
@@ -143,7 +143,7 @@ trait SyncTransactions
                 if (!$stage || (int)$stage['size']!==$change['size'] || !is_file($file) || filesize($file)!==$change['size'] || !hash_equals($change['blob_hash'],(string)hash_file('sha256',$file))) throw new ApiError(422,'同步檔案尚未完整上傳。');
                 $added+=$change['size'];
             }
-            $used=(int)$this->query('SELECT COALESCE(SUM(size),0) AS n FROM revisions WHERE user_id=?',[$uid])[0]['n'];
+            $used=$this->totalRetainedBytes($uid);
             if ($added>0 && $used+$added>$this->config['quota_bytes']) throw new ApiError(507,'儲存空間不足，請聯絡管理者。');
             $published=$this->publishSyncChanges($uid,$actor['device_id'],$changes,$heads);
             foreach ($changes as $change) $this->query('DELETE FROM sync_staging WHERE user_id=? AND device_id=? AND path_hash=? AND blob_hash=?',[$uid,$actor['device_id'],hash('sha256',$change['path']),$change['blob_hash']??'']);

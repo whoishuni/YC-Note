@@ -195,7 +195,7 @@ trait NotebookVersions
                 $changes[]=['path'=>$name,'base_revision'=>(int)($old['revision']??0),'blob_hash'=>$file['blob_hash']??null,'size'=>(int)($file['size']??0),'deleted'=>$file===null];
                 $added+=(int)($file['size']??0);
             }
-            $used=(int)$this->query('SELECT COALESCE(SUM(size),0) AS n FROM revisions WHERE user_id=?',[$uid])[0]['n'];
+            $used=$this->totalRetainedBytes($uid);
             if ($added>0 && $used+$added>$this->config['quota_bytes']) throw new ApiError(507,'儲存空間不足，請聯絡管理者。');
             $result=$this->publishSyncChanges($uid,'website',$changes,$heads);
             $after=array_replace($heads,array_column($result,null,'path'));

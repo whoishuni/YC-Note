@@ -28,7 +28,7 @@ try {
     if (!is_dir($root)&&!mkdir($root,0700,true)) throw new RuntimeException('private_directory');
     chmod($root,0700);
     if (!is_file($root.'/.yc-note')) file_put_contents($root.'/.yc-note','YC Note deployment');
-    $allowed=['src/bootstrap.php','src/Service.php','src/SyncTransactions.php','src/NotebookVersions.php','src/Notebooks.php','src/SecurityBridge.php','public/index.php','public/api.php','public/boot.php','public/style.css','public/icon.svg','public/.htaccess'];
+    $allowed=['src/SaberCloud.php','public/saber.php','public/avatar.png','src/bootstrap.php','src/Service.php','src/SyncTransactions.php','src/NotebookVersions.php','src/Notebooks.php','src/SecurityBridge.php','public/index.php','public/api.php','public/boot.php','public/style.css','public/icon.svg','public/.htaccess'];
     $release=$root.'/releases/'.gmdate('YmdHis').'-'.bin2hex(random_bytes(4));
     mkdir($release,0700,true);
     foreach ($allowed as $relative) {
@@ -41,7 +41,7 @@ try {
     }
     // Patch only anchored additions, keeping unrelated live rental changes.
     $nativeRoot=$docroot.'/rent';
-    $nativeAllowed=['admin/notes.php','includes/YcNoteModule.php','includes/yc_note_view.php','assets/css/yc-note.css','yc_note/api.php'];
+    $nativeAllowed=['admin/notes_connect.php','yc_note/saber.php','yc_note/saber/index.php','yc_note/saber/remote.php','yc_note/saber/status.php','yc_note/saber/ocs/v1.php','yc_note/saber/ocs/v2.php','yc_note/saber/.htaccess','admin/notes.php','includes/YcNoteModule.php','includes/yc_note_view.php','assets/css/yc-note.css','yc_note/api.php'];
     $patchAllowed=['config/features.php','includes/admin_header.php','includes/MaintenanceMode.php','.htaccess'];
     $pending=[];
     foreach ($nativeAllowed as $name) {
@@ -52,7 +52,10 @@ try {
     foreach ($patchAllowed as $name) {
         $bytes=file_get_contents($nativeRoot.'/'.$name);
         if ($bytes===false || empty($data['rental_patches'][$name])) throw new RuntimeException('native_patch_missing');
-        foreach ($data['rental_patches'][$name] as $patch) {
+        $edits=$data['rental_patches'][$name];
+        $final=base64_decode($edits[count($edits)-1]['after']??'',true);
+        if ($final && str_contains($bytes,$final)) { $pending[$name]=$bytes;continue; }
+        foreach ($edits as $patch) {
             $before=base64_decode($patch['before']??'',true); $after=base64_decode($patch['after']??'',true);
             if (!$before || !$after) throw new RuntimeException('native_patch_invalid');
             if (str_contains($bytes,$after)) continue;

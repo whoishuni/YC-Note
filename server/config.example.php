@@ -5,6 +5,8 @@ declare(strict_types=1);
 return [
     'base_path' => '/yc_note',
     'production' => true,
+    // Canonical external URL, never inferred from an untrusted Host header.
+    'saber_base_url' => 'https://yckuo.com/rent/yc_note/saber',
     'database' => [
         'dsn' => 'mysql:host=localhost;dbname=yc_note;charset=utf8mb4',
         'user' => 'yc_note', 'password' => '',

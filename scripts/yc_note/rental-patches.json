@@ -21,6 +21,10 @@
     {
       "before": "# ========== 9. 限制 HTTP 方法（僅允許 GET/POST） ==========\n<IfModule mod_rewrite.c>\n    RewriteCond %{REQUEST_METHOD} !^(GET|POST|HEAD)$ [NC]\n    RewriteRule .* - [F,L]\n</IfModule>\n\n",
       "after": "# ========== 9. 限制 HTTP 方法（僅允許 GET/POST） ==========\n<IfModule mod_rewrite.c>\n    RewriteCond %{REQUEST_METHOD} !^(GET|POST|HEAD)$ [NC]\n    # YC Note validates its bearer-only PUT/DELETE operations in the API.\n    RewriteCond %{REQUEST_URI} !^/rent/yc_note/api\\.php$ [NC]\n    RewriteRule .* - [F,L]\n</IfModule>\n\n"
+    },
+    {
+      "before": "# ========== 9. 限制 HTTP 方法（僅允許 GET/POST） ==========\n<IfModule mod_rewrite.c>\n    RewriteCond %{REQUEST_METHOD} !^(GET|POST|HEAD)$ [NC]\n    # YC Note validates its bearer-only PUT/DELETE operations in the API.\n    RewriteCond %{REQUEST_URI} !^/rent/yc_note/api\\.php$ [NC]\n    RewriteRule .* - [F,L]\n</IfModule>\n\n",
+      "after": "# ========== 9. 限制 HTTP 方法（僅允許 GET/POST） ==========\n<IfModule mod_rewrite.c>\n    RewriteCond %{REQUEST_METHOD} !^(GET|POST|HEAD)$ [NC]\n    # YC Note validates its bearer-only PUT/DELETE operations in the API.\n    RewriteCond %{REQUEST_URI} !^/rent/yc_note/api\\.php$ [NC]\n    RewriteCond %{REQUEST_URI} !^/rent/yc_note/saber/remote\\.php/webdav(?:/|$) [NC]\n    RewriteCond %{REQUEST_URI} !^/rent/yc_note/saber/ocs/v2\\.php/core/apppassword$ [NC]\n    RewriteRule .* - [F,L]\n    RewriteCond %{REQUEST_METHOD} !^(GET|POST|HEAD|OPTIONS|PROPFIND|MKCOL|PUT|DELETE)$ [NC]\n    RewriteRule ^yc_note/saber/ - [F,L]\n</IfModule>\n\n"
     }
   ]
 }
