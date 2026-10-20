@@ -15,8 +15,8 @@ $publish=static function(string $target,string $bytes,int $mode):void {
 };
 try {
     if (($_SERVER['HTTPS']??'')!=='on') throw new RuntimeException('https_required');
-    $body=file_get_contents('php://input',false,null,0,2*1024*1024+1);
-    if ($body===false||strlen($body)>2*1024*1024) throw new RuntimeException('request_size');
+    $body=file_get_contents('php://input',false,null,0,8*1024*1024+1);
+    if ($body===false||strlen($body)>8*1024*1024) throw new RuntimeException('request_size');
     $data=json_decode($body,true,flags:JSON_THROW_ON_ERROR);
     if (($data['action']??'')==='cleanup') { unlink(__FILE__); echo '{"removed":true}'; exit; }
     $docroot=__DIR__;
@@ -41,7 +41,19 @@ try {
     }
     // Patch only anchored additions, keeping unrelated live rental changes.
     $nativeRoot=$docroot.'/rent';
-    $nativeAllowed=['admin/notes_connect.php','yc_note/saber.php','yc_note/saber/index.php','yc_note/saber/remote.php','yc_note/saber/status.php','yc_note/saber/ocs/v1.php','yc_note/saber/ocs/v2.php','yc_note/saber/.htaccess','admin/notes.php','includes/YcNoteModule.php','includes/yc_note_view.php','assets/css/yc-note.css','yc_note/api.php'];
+    $nativeAllowed=['assets/js/yc-note/.htaccess','assets/vendor/yc-note/.htaccess','admin/notes_cloud.php','assets/js/yc-note/crypto.mjs','assets/js/yc-note/notebook.mjs','assets/js/yc-note/renderer.mjs','assets/js/yc-note/cloud.mjs','assets/vendor/yc-note/deps.mjs','assets/vendor/yc-note/pdf.min.mjs','assets/vendor/yc-note/pdf.worker.min.mjs','assets/vendor/yc-note/LICENSE.txt','assets/vendor/yc-note/Neucha-Regular.ttf','assets/vendor/yc-note/OFL.txt','admin/notes_connect.php','yc_note/saber.php','yc_note/saber/index.php','yc_note/saber/remote.php','yc_note/saber/status.php','yc_note/saber/ocs/v1.php','yc_note/saber/ocs/v2.php','yc_note/saber/.htaccess','admin/notes.php','includes/YcNoteModule.php','includes/yc_note_view.php','assets/css/yc-note.css','yc_note/api.php'];
+    $vendor=$data['vendor_manifest']??null;
+    if (!is_array($vendor) || count($vendor)>1000) throw new RuntimeException('web_assets_manifest');
+    foreach ($vendor as $name=>$digest) {
+        if (!is_string($name) || !preg_match('~^(?:(?:cmaps|standard_fonts|wasm)/)?[A-Za-z0-9][A-Za-z0-9_.-]*$~D',$name) || !is_string($digest) || !preg_match('/^[a-f0-9]{64}$/D',$digest)) throw new RuntimeException('web_asset_path');
+        $extension=strtolower(pathinfo($name,PATHINFO_EXTENSION));
+        if (!in_array($extension,['mjs','js','json','txt','ttf','otf','pfb','bcmap','wasm'],true) && !preg_match('/^LICENSE(?:_[A-Z0-9_]+)?$/D',basename($name))) throw new RuntimeException('web_asset_type');
+        $relative='assets/vendor/yc-note/'.$name;
+        $body=base64_decode($data['rental_files'][$relative]??'',true);
+        if (!is_string($body) || !hash_equals($digest,hash('sha256',$body))) throw new RuntimeException('web_asset_integrity');
+        $nativeAllowed[]=$relative;
+    }
+    $nativeAllowed[]='assets/vendor/yc-note/manifest.json';$nativeAllowed=array_values(array_unique($nativeAllowed));
     $patchAllowed=['config/features.php','includes/admin_header.php','includes/MaintenanceMode.php','.htaccess'];
     $pending=[];
     foreach ($nativeAllowed as $name) {
@@ -165,5 +177,5 @@ try {
     }
     error_log('[YC Note installer] type='.get_class($e).' code='.(int)$e->getCode().' stage='.$e->getMessage());
     http_response_code(500);
-    echo json_encode(['error'=>'installation_failed','type'=>get_class($e),'code'=>(int)$e->getCode(),'reason'=>$e instanceof Error?substr($e->getMessage(),0,200):null],JSON_THROW_ON_ERROR);
+    echo json_encode(['error'=>'installation_failed','type'=>get_class($e),'code'=>(int)$e->getCode(),'reason'=>preg_match('/^[a-z_]{1,64}$/D',$e->getMessage())?$e->getMessage():null],JSON_THROW_ON_ERROR);
 }

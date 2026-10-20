@@ -22,7 +22,7 @@ final class Service
     use Notebooks;
     use NotebookVersions;
     use SaberCloud;
-    public const INTEGRATION_VERSION = 5;
+    public const INTEGRATION_VERSION = 6;
     public function __construct(public readonly PDO $db, private PDO $identity, public readonly array $config) {}
 
     private function query(string $sql, array $params = []): array

@@ -2,7 +2,7 @@
 
 管理入口：https://yckuo.com/rent/admin/notes.php。已完成部署及建表，不需要手動匯入 SQL。舊 https://yckuo.com/yc_note/ 轉入租屋系統。
 
-## 官方 Saber 相容服務（整合版本 5）
+## 官方 Saber 相容服務（整合版本 6）
 
 iPad 使用 App Store 官方 Saber，在自訂 Nextcloud 伺服器填入 `https://yckuo.com/rent/yc_note/saber`。瀏覽器開啟租屋登入及 `admin/notes_connect.php` 的 CSRF 核准頁，不把租屋密碼交給 App。已核准的每組連線取得獨立雲端憑證；首次登入流程 20 分鐘失效，憑證只交付一次，活躍時延長 90 天閒置期限。使用者自行在 App 輸入加密密碼，伺服器不保存。
 
@@ -10,7 +10,9 @@ iPad 使用 App Store 官方 Saber，在自訂 Nextcloud 伺服器填入 `https:
 
 新增 5 張表 saber_login_flows、saber_credentials、saber_heads、saber_nodes、saber_revisions，合計 17 張；冪等建表保留舊資料。新版管理頁與核心須一起部署。每次雲端認證重新驗證租屋密碼雜湊、角色、封鎖、啟用、筆記權限及連線狀態；撤銷同時使未消費的舊授權失效，重新核准不復活舊憑證。
 
-官方版的 `.sbe` 檔案與檔名皆為密文，`config.sbc` 保留加密金鑰封套；與原明文 `files` 分開，歷史版本共同計入配額。網站「Saber 雲端」可下載同一帳號世代的加密 ZIP 備份，包含設定、密文與雜湊 manifest；這不是可直接匯入 Saber 的 SBA，也不是已完成的完整還原流程。網站目前不解密或轉換這些檔案；PDF 在 Saber 匯出，舊 YC Note 的網站 PDF 功能保留。官方版的離線／本機編輯、圖示名稱不能由後台更改；雲端唯讀只限制伺服器寫入。
+官方版的 `.sbe` 檔案與檔名皆為密文，`config.sbc` 保留加密金鑰封套；與原明文 `files` 分開，歷史版本共同計入配額。網站「Saber 雲端」可下載同一帳號世代的加密 ZIP 備份，包含設定、密文與雜湊 manifest；這不是可直接匯入 Saber 的 SBA，也不是已完成的完整還原流程。版本 6 的網站在瀏覽器解密、逐頁閱讀與下載 PDF／原稿，不把密碼或明文交給伺服器；PDF 為逐頁影像。舊 YC Note 的網站 PDF 功能保留。官方版的離線／本機編輯、圖示名稱不能由後台更改；雲端唯讀只限制伺服器寫入。
+
+新增 `admin/notes_cloud.php` 原生唯讀內容 API、`assets/js/yc-note/` 閱讀器及 `assets/vendor/yc-note/` 本機依賴。部署 helper 對照固定目錄、類型白名單與逐檔 manifest；不以整份租屋目錄覆蓋。授權 installer 的請求上限為 8 MB，正式 API 的檔案上限不變。詳見 WEB-READER.md。
 
 ## 檔案清單
 

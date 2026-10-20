@@ -13,7 +13,7 @@ YC Note 深度整合租屋系統的帳號、權限與私人筆記儲存。iPad �
 - 私有筆記儲存、歷史版本、檔案同步與衝突備份。
 - 原生管理頁、共用資安與維護模式，私有資料庫與檔案儲存。
 
-官方 Saber 的「其他 Nextcloud 伺服器」填入 `https://yckuo.com/rent/yc_note/saber`，由租屋網頁核准連線；雲端可唯讀或撤銷，官方 App 的本機編輯不受遠端限制。密文與加密設定以原樣儲存，網站可下載加密備份；PDF 目前在 Saber 匯出。
+官方 Saber 的「其他 Nextcloud 伺服器」填入 `https://yckuo.com/rent/yc_note/saber`，由租屋網頁核准連線；雲端可唯讀或撤銷，官方 App 的本機編輯不受遠端限制。密文與加密設定以原樣儲存，網站可下載加密備份；在瀏覽器本頁解鎖後，可逐頁閱讀、下載 PDF 或可編輯原稿。密碼不傳到伺服器。
 
 以下為保留的自訂客戶端建置方式，建置需 Flutter 3.47.7 / Dart 3.13.5；iOS 編譯與簽署另需 Xcode。Dart 內部 package 名稱保留 `saber`，筆記格式保留 `.sbn2/.sba`。
 

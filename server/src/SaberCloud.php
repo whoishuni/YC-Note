@@ -192,6 +192,47 @@ trait SaberCloud
         return ['files'=>(int)$head['files'],'bytes'=>(int)$head['bytes'],'retained_bytes'=>$this->saberRetainedBytes($uid),'updated_at'=>(int)$head['updated_at'],'versions'=>(int)$this->query('SELECT COUNT(*) AS n FROM saber_revisions WHERE user_id=? AND is_collection=0',[$uid])[0]['n']];
     }
 
+    /** Stable, paginated ciphertext metadata for the authenticated web reader. */
+    public function saberWebManifest(int $uid,?int $expected=null,string $cursor=''): array
+    {
+        $this->rentalUser($uid);
+        if ($cursor!=='' && !preg_match('/^[a-f0-9]{64}$/D',$cursor)) throw new ApiError(422,'無效的分頁。');
+        $this->db->beginTransaction();
+        try {
+            $generation=(int)($this->query('SELECT generation FROM saber_heads WHERE user_id=?',[$uid])[0]['generation']??0);
+            if ($expected!==null && $expected!==$generation) throw new ApiError(409,'筆記正在同步，請重新整理。');
+            $quiet=max(0,min(10,(int)($this->config['web_sync_quiet_seconds']??(!empty($this->config['production'])?2:0))));
+            $latest=(int)($this->query('SELECT MAX(updated_at) AS n FROM saber_nodes WHERE user_id=?',[$uid])[0]['n']??0);
+            if ($quiet && $latest>time()-$quiet) throw new ApiError(409,'筆記正在同步，請稍後再試。');
+            $columns='path_hash,path,revision,blob_hash,size,mtime';
+            $files=$this->query('SELECT '.$columns.' FROM saber_nodes WHERE user_id=? AND is_collection=0 AND deleted=0 AND path_hash>? ORDER BY path_hash LIMIT 501',[$uid,$cursor]);
+            $more=count($files)>500;if ($more) array_pop($files);
+            $config=$this->query('SELECT '.$columns.' FROM saber_nodes WHERE user_id=? AND path_hash=? AND deleted=0',[$uid,hash('sha256','Saber/config.sbc')])[0]??null;
+            $this->db->commit();
+            foreach ($files as &$file) foreach (['revision','size','mtime'] as $key) $file[$key]=(int)$file[$key];unset($file);
+            if ($config) foreach (['revision','size','mtime'] as $key) $config[$key]=(int)$config[$key];
+            return ['owner_id'=>$uid,'generation'=>$generation,'config'=>$config,'files'=>$files,'next_cursor'=>$more?end($files)['path_hash']:null];
+        } catch (Throwable $e) { $this->db->rollBack();throw $e; }
+    }
+
+    public function saberGeneration(int $uid): int
+    {
+        $this->rentalUser($uid);
+        return (int)($this->query('SELECT generation FROM saber_heads WHERE user_id=?',[$uid])[0]['generation']??0);
+    }
+
+    /** Read an immutable owner-bound revision; never accept an owner from HTTP. */
+    public function saberWebBlob(int $uid,string $pathHash,int $revision): array
+    {
+        $this->rentalUser($uid);
+        if (!preg_match('/^[a-f0-9]{64}$/D',$pathHash) || $revision<1) throw new ApiError(422,'無效的檔案。');
+        $node=$this->query('SELECT blob_hash,size FROM saber_revisions WHERE user_id=? AND path_hash=? AND revision=? AND deleted=0 AND is_collection=0',[$uid,$pathHash,$revision])[0]??null;
+        if (!$node || !$node['blob_hash']) throw new ApiError(404,'找不到檔案版本。');
+        $file=$this->blobPath($uid,$node['blob_hash']);
+        if (!is_file($file) || filesize($file)!==(int)$node['size'] || !hash_equals($node['blob_hash'],hash_file('sha256',$file))) throw new RuntimeException('Cloud revision integrity failure');
+        return $node+['file'=>$file];
+    }
+
     /** Mutations share the owner lock with access revocation and legacy quotas. */
     public function writeSaber(array $actor,string $path,?string $bytes,bool $collection=false,?int $mtime=null,string $ifMatch='',string $ifNoneMatch=''): array
     {

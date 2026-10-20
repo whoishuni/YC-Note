@@ -23,10 +23,15 @@ with zipfile.ZipFile(output,'w',zipfile.ZIP_DEFLATED) as archive:
     archive.write(ROOT/'server/config.example.php','private/yc-note-server/config.example.php')
     archive.write(ROOT/'server/sql/identity-view.example.sql','private/yc-note-server/sql/identity-view.example.sql')
     archive.write(ROOT/'docs/DEPLOYMENT.md','DEPLOYMENT.md')
-    for name in ['admin/notes_connect.php','yc_note/saber.php','yc_note/saber/index.php','yc_note/saber/remote.php','yc_note/saber/status.php','yc_note/saber/ocs/v1.php','yc_note/saber/ocs/v2.php','yc_note/saber/.htaccess','admin/notes.php','includes/YcNoteModule.php','includes/yc_note_view.php','assets/css/yc-note.css','yc_note/api.php']:
+    for name in ['assets/js/yc-note/.htaccess','assets/vendor/yc-note/.htaccess','admin/notes_cloud.php','assets/js/yc-note/crypto.mjs','assets/js/yc-note/notebook.mjs','assets/js/yc-note/renderer.mjs','assets/js/yc-note/cloud.mjs','assets/vendor/yc-note/deps.mjs','assets/vendor/yc-note/pdf.min.mjs','assets/vendor/yc-note/pdf.worker.min.mjs','assets/vendor/yc-note/LICENSE.txt','assets/vendor/yc-note/Neucha-Regular.ttf','assets/vendor/yc-note/OFL.txt','admin/notes_connect.php','yc_note/saber.php','yc_note/saber/index.php','yc_note/saber/remote.php','yc_note/saber/status.php','yc_note/saber/ocs/v1.php','yc_note/saber/ocs/v2.php','yc_note/saber/.htaccess','admin/notes.php','includes/YcNoteModule.php','includes/yc_note_view.php','assets/css/yc-note.css','yc_note/api.php']:
         path=args.rental_root/name
         target='public_html/rent/'+name
         archive.write(path,target);manifest[target]=hashlib.sha256(path.read_bytes()).hexdigest()
+    for path in sorted((args.rental_root/'assets/vendor/yc-note').rglob('*')):
+        if not path.is_file():continue
+        target='public_html/rent/'+str(path.relative_to(args.rental_root))
+        if target not in manifest:
+            archive.write(path,target);manifest[target]=hashlib.sha256(path.read_bytes()).hexdigest()
     patches=json.loads((ROOT/'scripts/yc_note/rental-patches.json').read_text())
     patch=''
     for name,edits in patches.items():

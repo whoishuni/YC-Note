@@ -50,6 +50,13 @@ $small=new Service($db,$db,array_replace($config,['quota_bytes'=>$service->stora
 fails(507,fn()=>$small->writeSaber($a,$path,'more'),'quota counts cloud and legacy retention together');
 $bytes=$service->storageUsage(1)['retained_bytes'];
 check($bytes>=$service->saberStats(1)['retained_bytes'],'management usage includes both stores');
+$web=$service->saberWebManifest(1);
+check($web['generation']===5 && count($web['files'])===2 && $web['config']['path']==='Saber/config.sbc','web manifest identifies immutable config and file revisions');
+check(file_get_contents($service->saberWebBlob(1,hash('sha256',$path),1)['file'])==='ciphertext 1','web reader can fetch earlier immutable revision after new writes');
+fails(404,fn()=>$service->saberWebBlob(2,hash('sha256',$path),1),'web reader is owner bound');
+fails(422,fn()=>$service->saberWebManifest(1,null,'../bad'),'manifest cursor validated');
+fails(409,fn()=>$service->saberWebManifest(1,4),'changed snapshot rejected rather than mixing revisions');
+fails(422,fn()=>$service->saberWebBlob(1,'bad',1),'blob identifier validated');
 $pending=$service->startSaberLogin('Saber/1.36.2 (ios)');parse_str(parse_url($pending['login'],PHP_URL_QUERY),$params);$pid=$params['flow'];
 $service->grantSaberLogin($pid,2,$fp,false);
 fails(404,fn()=>$service->pollSaberLogin($pending['poll']['token']),'regular admin waits for manual root approval');
@@ -80,4 +87,15 @@ $db->exec('UPDATE saber_login_flows SET expires_at='.(time()-1));$service->setDe
 fails(404,fn()=>$service->pollSaberLogin($late['poll']['token']),'late approval never issues an expired flow credential');
 check(!str_contains(json_encode($service->auditLog(1)),$creds['appPassword']),'no credentials in audit log');
 $service->migrate();check($service->saberStats(1)['files']===2,'repeated migration preserves cloud content');
+$q=$db->prepare('INSERT INTO saber_nodes (user_id,path_hash,path,is_collection,revision,generation,blob_hash,size,deleted,mtime,updated_at,device_id) VALUES (7,?,?,0,1,0,?,16,0,1,1,?)');
+for ($i=0;$i<503;$i++) { $p='Saber/'.str_pad(dechex($i),32,'0',STR_PAD_LEFT).'.sbe';$q->execute([hash('sha256',$p),$p,str_repeat('a',64),'fixture']); }
+$page=$service->saberWebManifest(7);$last=$service->saberWebManifest(7,0,$page['next_cursor']);
+check(count($page['files'])===500 && count($last['files'])===3 && $last['next_cursor']===null,'manifest pagination has no missing or duplicate rows');
+check(count(array_unique(array_column([...$page['files'],...$last['files']],'path_hash')))===503,'manifest pagination stable opaque ordering');
+$db->exec('UPDATE saber_nodes SET updated_at='.time().' WHERE user_id=7');
+$quiet=new Service($db,$db,array_replace($config,['web_sync_quiet_seconds'=>2]));
+fails(409,fn()=>$quiet->saberWebManifest(7),'web reader waits until incoming writes settle');
+$db->exec('UPDATE saber_nodes SET updated_at=1 WHERE user_id=7');
+check(count($quiet->saberWebManifest(7)['files'])===500,'settled ciphertext snapshot becomes readable');
+check($quiet->saberGeneration(1)===5,'export authorization checks current generation without listing private filenames');
 echo "PASS: $checks combined backend and Saber cloud checks\n";
