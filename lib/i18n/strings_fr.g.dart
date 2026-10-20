@@ -69,7 +69,7 @@ class _Translations$home$fr extends Translations$home$en {
 	@override late final _Translations$home$titles$fr titles = _Translations$home$titles$fr._(_root);
 	@override late final _Translations$home$tooltips$fr tooltips = _Translations$home$tooltips$fr._(_root);
 	@override late final _Translations$home$create$fr create = _Translations$home$create$fr._(_root);
-	@override String get welcome => 'Bienvenue dans Saber';
+	@override String get welcome => 'Bienvenue dans YC Note';
 	@override String get invalidFormat => 'Type de fichier non supporté. Veuillez choisr un fichier .sbn, .sbn2, .sba ou .pdf.';
 	@override String get noFiles => 'Aucun fichier trouvé';
 	@override String get noPreviewAvailable => 'Aperçu non disponible';
@@ -118,7 +118,7 @@ class _Translations$settings$fr extends Translations$settings$en {
 	];
 	@override late final _Translations$settings$reset$fr reset = _Translations$settings$reset$fr._(_root);
 	@override String get resyncEverything => 'Tout re-syncroniser';
-	@override String get openDataDir => 'Ouvrir le dossier Saber';
+	@override String get openDataDir => 'Ouvrir le dossier YC Note';
 	@override late final _Translations$settings$customDataDir$fr customDataDir = _Translations$settings$customDataDir$fr._(_root);
 	@override String get autosaveDisabled => 'Jamais';
 	@override String get shapeRecognitionDisabled => 'Jamais';
@@ -407,7 +407,7 @@ class _Translations$sentry$consent$fr extends Translations$sentry$consent$en {
 	final TranslationsFr _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Aide à améliorer Saber ?';
+	@override String get title => 'Aide à améliorer YC Note ?';
 	@override late final _Translations$sentry$consent$description$fr description = _Translations$sentry$consent$description$fr._(_root);
 	@override late final _Translations$sentry$consent$answers$fr answers = _Translations$sentry$consent$answers$fr._(_root);
 }
@@ -458,7 +458,7 @@ class _Translations$settings$prefLabels$fr extends Translations$settings$prefLab
 	@override String get autosave => 'Sauvegarde automatique';
 	@override String get shapeRecognitionDelay => 'Délai de reconnaissance de forme';
 	@override String get autoStraightenLines => 'Redresser les lignes automatiquement';
-	@override String get customDataDir => 'Dossier Saber personnalisé';
+	@override String get customDataDir => 'Dossier YC Note personnalisé';
 	@override String get sentry => 'Rapport d’erreurs';
 }
 
@@ -470,7 +470,7 @@ class _Translations$settings$prefDescriptions$fr extends Translations$settings$p
 
 	// Translations
 	@override String get hyperlegibleFont => 'La fonte Atkinson Hyperlegible améliore la lisibilité pour les personnes malvoyantes';
-	@override String get allowInsecureConnections => '(Déconseillé) Autoriser Saber à se connecter à des serveurs dont les certificats sont auto-signés/non-sécurisé';
+	@override String get allowInsecureConnections => '(Déconseillé) Autoriser YC Note à se connecter à des serveurs dont les certificats sont auto-signés/non-sécurisé';
 	@override String get preferGreyscale => 'Pour les couleurs de stylos proposées';
 	@override String get autoClearWhiteboardOnExit => 'Il restera synchronisé avec vos autres appareils';
 	@override String get disableEraserAfterUse => 'Revenir automatiquement au stylo après usage de la gomme';
@@ -581,10 +581,10 @@ class _Translations$login$ncLoginStep$fr extends Translations$login$ncLoginStep$
 
 	// Translations
 	@override String get whereToStoreData => 'Choisissez où vous souhaitez stocker vos données :';
-	@override String get saberNcServer => 'Le serveur Nextcloud de Saber';
+	@override String get saberNcServer => 'Le serveur Nextcloud de YC Note';
 	@override String get otherNcServer => 'Autre serveur Nextcloud';
 	@override String get serverUrl => 'Adresse du serveur';
-	@override String get loginWithSaber => 'Se connecter avec Saber';
+	@override String get loginWithSaber => 'Se connecter avec YC Note';
 	@override String get loginWithNextcloud => 'Se connecter avec Nextcloud';
 	@override late final _Translations$login$ncLoginStep$loginFlow$fr loginFlow = _Translations$login$ncLoginStep$loginFlow$fr._(_root);
 }
@@ -597,7 +597,7 @@ class _Translations$login$encLoginStep$fr extends Translations$login$encLoginSte
 
 	// Translations
 	@override String get enterEncPassword => 'Pour protéger vos données, saisissez votre mot de passe de chiffrement :';
-	@override String get newToSaber => 'Nouveau sur Saber ? Entrez simplement un nouveau mot de passe de chiffrement.';
+	@override String get newToSaber => 'Nouveau sur YC Note ? Entrez simplement un nouveau mot de passe de chiffrement.';
 	@override String get encPassword => 'Mot de passe de chiffrement';
 	@override String get encFaqTitle => 'Foire aux questions';
 	@override String get wrongEncPassword => 'Le décryptage a échoué avec le mot de passe fourni. Veuillez réessayer.';
@@ -639,7 +639,7 @@ class _Translations$profile$faq$1$fr extends Translations$profile$faq$1$en {
 
 	// Translations
 	@override String get q => 'Comment changer mon mot de passe Nextcloud ?';
-	@override String get a => 'Allez sur le site web du serveur et connectez-vous. Allez dans Paramètres > Sécurité > Changer mon mot de passe. Vous devrez vous déconnecter et vous reconnecter dans Saber après avoir changé votre mot de passe.';
+	@override String get a => 'Allez sur le site web du serveur et connectez-vous. Allez dans Paramètres > Sécurité > Changer mon mot de passe. Vous devrez vous déconnecter et vous reconnecter dans YC Note après avoir changé votre mot de passe.';
 }
 
 // Path: profile.faq.2
@@ -650,7 +650,7 @@ class _Translations$profile$faq$2$fr extends Translations$profile$faq$2$en {
 
 	// Translations
 	@override String get q => 'Comment changer mon mot de passe de chiffrement ?';
-	@override String get a => '0. Assurez-vous que la synchronisation soit terminée (regardez la barre de progression sur l\'écran d\'accueil).\n1. Déconnectez-vous de Saber.\n2. Sur le site web du serveur supprimez votre dossier \'Saber\'. Cela supprimera toutes vos notes sur le serveur.\n3. Connectez-vous à nouveau dans Saber. Vous pourrez choisir un nouveau mot de passe de chiffrement à la connexion.\n4. N\'oubliez pas de vous déconnecter et vous re-connecter dans Saber sur votre poste également.';
+	@override String get a => '0. Assurez-vous que la synchronisation soit terminée (regardez la barre de progression sur l\'écran d\'accueil).\n1. Déconnectez-vous de YC Note.\n2. Sur le site web du serveur supprimez votre dossier \'YC Note\'. Cela supprimera toutes vos notes sur le serveur.\n3. Connectez-vous à nouveau dans YC Note. Vous pourrez choisir un nouveau mot de passe de chiffrement à la connexion.\n4. N\'oubliez pas de vous déconnecter et vous re-connecter dans YC Note sur votre poste également.';
 }
 
 // Path: profile.faq.3
@@ -661,7 +661,7 @@ class _Translations$profile$faq$3$fr extends Translations$profile$faq$3$en {
 
 	// Translations
 	@override String get q => 'Comment puis-je supprimer mon compte ?';
-	@override String get a => 'Cliquez sur le button "${_root.profile.quickLinks.deleteAccount}" ci-dessus, et connectez-vous si nécessaire.\nSi vous utilisez le serveur Saber officiel, votre compte sera supprimé au bout d\'une semaine . Durant cette période, vous pourrez me contacter à adilhanney@disroot.org pour annuler la suppression.\nSi vous utilisez un autre serveur, il n\'est pas certain que vous puissiez supprimer votre compte dessus : il vous faudra consulter les règles de confidentialité du serveur pour plus d\'informations.';
+	@override String get a => 'Cliquez sur le button "${_root.profile.quickLinks.deleteAccount}" ci-dessus, et connectez-vous si nécessaire.\nSi vous utilisez le serveur YC Note officiel, votre compte sera supprimé au bout d\'une semaine . Durant cette période, vous pourrez me contacter à adilhanney@disroot.org pour annuler la suppression.\nSi vous utilisez un autre serveur, il n\'est pas certain que vous puissiez supprimer votre compte dessus : il vous faudra consulter les règles de confidentialité du serveur pour plus d\'informations.';
 }
 
 // Path: editor.toolbar
@@ -814,7 +814,7 @@ class _Translations$editor$versionTooNew$fr extends Translations$editor$versionT
 	final TranslationsFr _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Cette note a été modifiée avec une version plus récente de Saber';
+	@override String get title => 'Cette note a été modifiée avec une version plus récente de YC Note';
 	@override String get subtitle => 'Éditer cette note pourrait entraîner la perte de certaines informations. Voulez-vous la modifier quand même ?';
 	@override String get allowEditing => 'Autoriser les modifications';
 }
@@ -906,7 +906,7 @@ class _Translations$login$ncLoginStep$loginFlow$fr extends Translations$login$nc
 	final TranslationsFr _root; // ignore: unused_field
 
 	// Translations
-	@override String get pleaseAuthorize => 'Veuillez autoriser Saber pour accéder à votre compte Nextcloud';
+	@override String get pleaseAuthorize => 'Veuillez autoriser YC Note pour accéder à votre compte Nextcloud';
 	@override String get followPrompts => 'Veuillez suivre les indications dans l\'interface Nextcloud';
 	@override String get browserDidntOpen => 'La page de connexion n\'est pas ouverte ? Cliquez ici';
 }
@@ -930,7 +930,7 @@ class _Translations$login$encLoginStep$encFaq$1$fr extends Translations$login$en
 
 	// Translations
 	@override String get q => 'Je n\'ai pas encore défini de mot de passe de chiffrement. Où est-ce qu\'il se trouve ?';
-	@override String get a => 'Choisissez un nouveau mot de passe de chiffrement et entrez-le ci-dessus.\nSaber va générer vos clés de chiffrement à partir de ce mot de passe automatiquement.';
+	@override String get a => 'Choisissez un nouveau mot de passe de chiffrement et entrez-le ci-dessus.\nYC Note va générer vos clés de chiffrement à partir de ce mot de passe automatiquement.';
 }
 
 // Path: login.encLoginStep.encFaq.2

@@ -6,6 +6,7 @@ import 'package:saber/components/navbar/horizontal_navbar.dart';
 import 'package:saber/components/theming/saber_theme.dart';
 import 'package:saber/data/file_manager/file_manager.dart';
 import 'package:saber/data/routes.dart';
+import 'package:saber/data/yc_note/account.dart';
 import 'package:saber/i18n/strings.g.dart';
 import 'package:saber/pages/editor/editor.dart';
 
@@ -24,6 +25,7 @@ class _NewNoteButtonState extends State<NewNoteButton> {
 
   @override
   Widget build(BuildContext context) {
+    if (ycAccount.isReadOnly) return const SizedBox.shrink();
     const materialBorderRadius = BorderRadius.all(.circular(16));
     return SpeedDial(
       spacing: 3,

@@ -20,7 +20,7 @@ home:
   create:
     newNote: 新しいノート
     importNote: ノートをインポートする
-  welcome: ようこそSaberへ
+  welcome: ようこそYC Noteへ
   invalidFormat: 選択されたファイルはサポートされていません。sbn/sbn2 ファイルか、PDFファイルを選択してください。
   noFiles: ファイルが見つかりません
   noPreviewAvailable: プレビューがありません
@@ -106,7 +106,7 @@ settings:
     layoutSize: レイアウトの種類
     customAccentColor: オリジナルの色
     hyperlegibleFont: Hyperlegible フォント
-    shouldCheckForUpdates: Saberの更新を自動的に確認する
+    shouldCheckForUpdates: YC Noteの更新を自動的に確認する
     shouldAlwaysAlertForUpdates: より速いアップデート
     allowInsecureConnections: 安全でない接続を許可する
     editorToolbarAlignment: 編集ツールバーの位置調整
@@ -129,7 +129,7 @@ settings:
     hideFingerDrawingToggle(OUTDATED): 指の描画トグルを非表示にする
   prefDescriptions:
     hyperlegibleFont: Atkinson Hyperlegibleは、弱視読者の読みやすさを向上させます。
-    allowInsecureConnections: (非推奨) Saber が自己署名/信頼できない証明書を持つサーバーに接続できるようにする
+    allowInsecureConnections: (非推奨) YC Note が自己署名/信頼できない証明書を持つサーバーに接続できるようにする
     preferGreyscale: e-inkディスプレイ用
     autoClearWhiteboardOnExit: 他のデバイスと同期されます
     disableEraserAfterUse: 消しゴムの使用後、自動的にペンに戻す
@@ -170,7 +170,7 @@ settings:
     title: この設定をリセットしますか？
     button: リセット
   resyncEverything: すべてを同期する
-  openDataDir: Saber フォルダーを開く
+  openDataDir: YC Note フォルダーを開く
   customDataDir:
     cancel: 取消
     select: 選択
@@ -199,18 +199,18 @@ login:
     loggedIn: Nextcloudでログイン
   ncLoginStep:
     whereToStoreData: "データを保存する場所を選択してください:"
-    saberNcServer: Saber の Nextcloud サーバー
+    saberNcServer: YC Note の Nextcloud サーバー
     otherNcServer: その他のNextcloudサーバー
     serverUrl: サーバーのURL
-    loginWithSaber: Saber にログイン
+    loginWithSaber: YC Note にログイン
     loginWithNextcloud: Nextcloudでログイン
     loginFlow:
-      pleaseAuthorize: Saber に登録して、あなたのNextcloudアカウントにアクセスしてください
+      pleaseAuthorize: YC Note に登録して、あなたのNextcloudアカウントにアクセスしてください
       followPrompts: Nextcloud のプロンプトに従ってください
       browserDidntOpen: ログインページが開かなかった場合はここをクリック
   encLoginStep:
     enterEncPassword: "データを保護するために、暗号化パスワードを入力してください:"
-    newToSaber: Saber は初めてですか？新しい暗号化パスワードを入力するだけです。
+    newToSaber: YC Note は初めてですか？新しい暗号化パスワードを入力するだけです。
     encPassword: 暗号化パスワード
     encFaqTitle: よくある質問
     wrongEncPassword: 入力されたパスワードでは、復号に失敗しました。 もう一度入力してください。
@@ -220,7 +220,7 @@ login:
     - q: 暗号化パスワードは未設定です。 どこで設定できますか？
       a: |-
         両方に新しい暗号化パスワードを入力してください。
-        Saber は自動で新しい暗号化キーを生成します。
+        YC Note は自動で新しい暗号化キーを生成します。
     - q: Nextcloud アカウントと同じパスワードを使うことはできますか?
 profile:
   title: プロフィール
@@ -235,15 +235,15 @@ profile:
   - q: ログアウトするとメモが消えてしまいますか？
     a: いいえ。メモはデバイスとサーバーの両方に残ります。ログインし直すまで、サーバーとは同期されません。データを失わないように、ログアウトする前に同期が完了したことを確認してください（ホーム画面の同期進行状況をご覧ください）。
   - q: Nextcloudのパスワードを変更する方法を教えてください
-    a: サーバーのウェブサイトにアクセスし、ログインします。「設定」>「セキュリティ」>「パスワードの変更」を選択します。パスワード変更後は、Saberからログアウトし、再度ログインする必要があります。
+    a: サーバーのウェブサイトにアクセスし、ログインします。「設定」>「セキュリティ」>「パスワードの変更」を選択します。パスワード変更後は、YC Noteからログアウトし、再度ログインする必要があります。
   - q: 暗号化パスワードの変更方法を教えてください。
     a: |-
-      1. Saberからログアウトする。データが失われないように、ログアウトする前に同期が完了していることを確認してください（ホーム画面で同期の進行状況を確認できます）。
-      2. サーバーのウェブサイトにアクセスし、「Saber」フォルダを削除してください。これにより、サーバーからすべてのメモが削除されます。
+      1. YC Noteからログアウトする。データが失われないように、ログアウトする前に同期が完了していることを確認してください（ホーム画面で同期の進行状況を確認できます）。
+      2. サーバーのウェブサイトにアクセスし、「YC Note」フォルダを削除してください。これにより、サーバーからすべてのメモが削除されます。
       3. セーバーに再ログインする。ログイン時に新しい暗号化パスワードを選択できます。
       4. 他のデバイスでもログアウトしてログインし直すことをお忘れなく。
   - q: アカウントを削除するにはどうすればよいですか？
-    a: "上部の\"@:profile.quickLinks.deleteAccount\"ボタンをタップし、必要であればログインしてください。Saber公式サーバーを利用している場合、1週間の猶予期間の後にアカウントが削除されます。この期間中であれば、adilhanney@disroot.orgまでご連絡いただければ、削除を取り消すことが可能です。サードパーティのサーバーをご利用の場合、アカウントを削除するオプションがない場合があります。詳細については、ご利用のサーバープライバシーポリシーをご確認ください。"
+    a: "上部の\"@:profile.quickLinks.deleteAccount\"ボタンをタップし、必要であればログインしてください。YC Note公式サーバーを利用している場合、1週間の猶予期間の後にアカウントが削除されます。この期間中であれば、adilhanney@disroot.orgまでご連絡いただければ、削除を取り消すことが可能です。サードパーティのサーバーをご利用の場合、アカウントを削除するオプションがない場合があります。詳細については、ご利用のサーバープライバシーポリシーをご確認ください。"
   quotaUsageUncapped(OUTDATED): $used を使用しています
 appInfo:
   licenseNotice: |-
@@ -351,7 +351,7 @@ editor:
     watchingServer: 現在、サーバーの更新を待っています。 このモードで編集が無効になっています.
     corrupted: メモの読み込みに失敗しました。メモが破損しているか、ダウンロード中である可能性があります。
   versionTooNew:
-    title: このメモは新しいバージョンのSaberを使用して編集されたものです
+    title: このメモは新しいバージョンのYC Noteを使用して編集されたものです
     subtitle: このメモを編集すると、いくつかの情報が失われる可能性があります。これを無視して編集しますか？
     allowEditing: 編集を許可する
   quill:

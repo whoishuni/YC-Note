@@ -202,9 +202,8 @@ sealed class EditorImage extends ChangeNotifier {
         _firstLoadCompleter!.complete,
         onError: _firstLoadCompleter!.completeError,
       );
-    } else if (!_firstLoadCompleter!.isCompleted) {
-      await _firstLoadCompleter!.future;
     }
+    await _firstLoadCompleter!.future;
 
     _loadedIn = true;
   }
@@ -250,6 +249,45 @@ sealed class EditorImage extends ChangeNotifier {
   });
 
   EditorImage copy();
+
+  Future<PngEditorImage> rasterForExport(ui.Image raster) async {
+    try {
+      final data = await raster.toByteData(format: ui.ImageByteFormat.png);
+      if (data == null) throw StateError('Could not render attachment');
+      final scaleX = raster.width / naturalSize.width;
+      final scaleY = raster.height / naturalSize.height;
+      return PngEditorImage(
+        id: id,
+        assetCache: assetCache,
+        extension: '.png',
+        imageProvider: MemoryImage(data.buffer.asUint8List()),
+        pageIndex: pageIndex,
+        pageSize: pageSize,
+        naturalSize: Size(raster.width.toDouble(), raster.height.toDouble()),
+        dstRect: dstRect,
+        srcRect: srcRect.isEmpty
+            ? Rect.fromLTWH(
+                0,
+                0,
+                raster.width.toDouble(),
+                raster.height.toDouble(),
+              )
+            : Rect.fromLTWH(
+                srcRect.left * scaleX,
+                srcRect.top * scaleY,
+                srcRect.width * scaleX,
+                srcRect.height * scaleY,
+              ),
+        invertible: invertible,
+        backgroundFit: backgroundFit,
+        onMoveImage: null,
+        onDeleteImage: null,
+        onMiscChange: null,
+      );
+    } finally {
+      raster.dispose();
+    }
+  }
 
   /// Resizes [before] to fit inside [max] while maintaining aspect ratio
   @visibleForTesting

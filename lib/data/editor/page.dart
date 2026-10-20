@@ -335,6 +335,7 @@ class EditorPage extends ChangeNotifier implements HasSize {
   /// you're done with it.
   EditorPage cloneForRasterization({bool rasterizeAllStrokes = false}) {
     return copyWith(
+      images: images.toList(),
       strokes: rasterizeAllStrokes
           ? strokes
           : strokes.where(EditorExporter.shouldRasterizeStroke).toList(),

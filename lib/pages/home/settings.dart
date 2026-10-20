@@ -8,10 +8,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:saber/components/navbar/responsive_navbar.dart';
 import 'package:saber/components/settings/app_info.dart';
-import 'package:saber/components/settings/nextcloud_profile.dart';
 import 'package:saber/components/settings/settings_button.dart';
 import 'package:saber/components/settings/settings_color.dart';
-import 'package:saber/components/settings/settings_directory_selector.dart';
 import 'package:saber/components/settings/settings_dropdown.dart';
 import 'package:saber/components/settings/settings_selection.dart';
 import 'package:saber/components/settings/settings_sentry.dart';
@@ -31,6 +29,7 @@ import 'package:saber/data/routes.dart';
 import 'package:saber/data/sentry/sentry_init.dart';
 import 'package:saber/data/tools/shape_pen.dart';
 import 'package:saber/i18n/strings.g.dart';
+import 'package:saber/pages/user/yc_login.dart';
 import 'package:stow/stow.dart';
 
 class const SettingsPage({super.key}) extends StatefulWidget {
@@ -189,7 +188,7 @@ class _SettingsPageState extends State<SettingsPage> {
           SliverSafeArea(
             sliver: SliverList.list(
               children: [
-                const NextcloudProfile(),
+                const YcAccountTile(),
                 const Padding(padding: .all(8), child: AppInfo()),
                 SettingsSubtitle(subtitle: t.settings.prefCategories.general),
                 SettingsDropdown(
@@ -548,11 +547,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 SettingsSubtitle(subtitle: t.settings.prefCategories.advanced),
                 if (isSentryAvailable) const SettingsSentryConsent(),
-                if (Platform.isAndroid)
-                  SettingsDirectorySelector(
-                    title: t.settings.prefLabels.customDataDir,
-                    icon: Icons.folder,
-                  ),
                 if (Platform.isWindows || Platform.isLinux || Platform.isMacOS)
                   SettingsButton(
                     title: t.settings.openDataDir,

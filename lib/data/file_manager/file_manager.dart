@@ -13,8 +13,11 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:saber/components/home/sort_button.dart';
-import 'package:saber/data/nextcloud/saber_syncer.dart';
 import 'package:saber/data/prefs.dart';
+import 'package:saber/data/yc_note/account.dart';
+import 'package:saber/data/yc_note/file_coordinator.dart';
+import 'package:saber/data/yc_note/local_batch.dart';
+import 'package:saber/data/yc_note/sync.dart';
 import 'package:saber/i18n/strings.g.dart';
 import 'package:saber/pages/editor/editor.dart';
 import 'package:saver_gallery/saver_gallery.dart';
@@ -27,11 +30,16 @@ class FileManager {
 
   static final log = Logger('FileManager');
 
-  static const appRootDirectoryPrefix = 'Saber';
+  static const appRootDirectoryPrefix = 'YC Note';
 
   /// This isn't final because isolates sometimes init multiple times.
   /// Realistically, this value never changes.
   static late String documentsDirectory;
+  static String? _accountNamespace;
+  static bool get canWriteAccount =>
+      !ycAccount.isReadOnly &&
+      (_accountNamespace == null ||
+          (ycAccount.canWrite && ycAccount.namespace == _accountNamespace));
 
   static final fileWriteStream = StreamController<FileOperation>.broadcast();
 
@@ -40,7 +48,7 @@ class FileManager {
 
   /// A regex that matches the file names/paths of asset files,
   /// including previews, e.g. `mynote.sbn2.1`.
-  static final assetFileRegex = RegExp(r'\.sbn2?\.[\dp]+$');
+  static final assetFileRegex = RegExp(r'\.sbn2?\.(?:[0-9]+|p|pdf|pdf\.json)$');
 
   /// Forbidden names for files and directories (on any/all platforms).
   /// These patterns match the base name only (not the full path).
@@ -69,12 +77,17 @@ class FileManager {
   static Future<void> init({
     String? documentsDirectory,
     bool shouldWatchRootDirectory = true,
-  }) async {
+    String? accountNamespace,
+    bool recoverTransactions = true,
+  }) => YcFileCoordinator.run(() async {
     FileManager.documentsDirectory =
         documentsDirectory ?? await getDocumentsDirectory();
 
-    if (shouldWatchRootDirectory) unawaited(watchRootDirectory());
-  }
+    _accountNamespace = accountNamespace;
+    if (recoverTransactions)
+      await YcLocalBatch(FileManager.documentsDirectory).recover();
+    if (shouldWatchRootDirectory) await watchRootDirectory();
+  });
 
   static Future<String> getDocumentsDirectory() async =>
       stows.customDataDir.value ?? await getDefaultDocumentsDirectory();
@@ -168,11 +181,11 @@ class FileManager {
           // The path may or may not be relative,
           // so remove the root directory path to make sure it's relative.
           .replaceFirst(documentsDirectory, '');
+      if (path.split('/').any((part) => part.startsWith('.'))) return;
       broadcastFileWrite(type, path);
     });
   }
 
-  @visibleForTesting
   static void broadcastFileWrite(FileOperationType type, String path) async {
     if (!fileWriteStream.hasListener) return;
 
@@ -187,25 +200,26 @@ class FileManager {
   }
 
   /// Returns the contents of the file at [filePath].
-  static Future<Uint8List?> readFile(String filePath, {int retries = 3}) async {
-    filePath = _sanitisePath(filePath);
+  static Future<Uint8List?> readFile(String filePath, {int retries = 3}) =>
+      YcFileCoordinator.run(() async {
+        filePath = _sanitisePath(filePath);
 
-    Uint8List? result;
-    final file = getFile(filePath);
-    if (file.existsSync()) {
-      result = await file.readAsBytes();
-      if (result.isEmpty) result = null;
-    } else {
-      retries = 0; // don't retry if the file doesn't exist
-    }
+        Uint8List? result;
+        final file = getFile(filePath);
+        if (file.existsSync()) {
+          result = await file.readAsBytes();
+          if (result.isEmpty) result = null;
+        } else {
+          retries = 0; // don't retry if the file doesn't exist
+        }
 
-    // If result is null, try again in case the file was locked.
-    if (result == null && retries > 0) {
-      await Future.delayed(const Duration(milliseconds: 100));
-      return readFile(filePath, retries: retries - 1);
-    }
-    return result;
-  }
+        // If result is null, try again in case the file was locked.
+        if (result == null && retries > 0) {
+          await Future.delayed(const Duration(milliseconds: 100));
+          return readFile(filePath, retries: retries - 1);
+        }
+        return result;
+      });
 
   /// Whether getFile should just return File(filePath)
   /// instead of prefixing with the documents directory.
@@ -240,7 +254,8 @@ class FileManager {
     bool awaitWrite = false,
     bool alsoUpload = true,
     DateTime? lastModified,
-  }) async {
+  }) => YcFileCoordinator.run(() async {
+    if (!canWriteAccount) return;
     filePath = _sanitisePath(filePath);
     log.fine('Writing to $filePath');
 
@@ -249,7 +264,7 @@ class FileManager {
     final file = getFile(filePath);
     await _createFileDirectory(filePath);
     Future writeFuture = Future.wait([
-      file.writeAsBytes(toWrite).then((file) async {
+      _writeAtomicFile(file, toWrite).then((file) async {
         if (lastModified != null) await file.setLastModified(lastModified);
       }),
       // if we're using a new format, also delete the old file
@@ -264,7 +279,7 @@ class FileManager {
 
     void afterWrite() {
       broadcastFileWrite(FileOperationType.write, filePath);
-      if (alsoUpload) syncer.uploader.enqueueRel(filePath);
+      if (alsoUpload) ycSync.schedule();
       if (filePath.endsWith(Editor.extension)) {
         _removeReferences(
           '${filePath.substring(0, filePath.length - Editor.extension.length)}'
@@ -274,15 +289,136 @@ class FileManager {
     }
 
     writeFuture = writeFuture.then((_) => afterWrite());
-    if (awaitWrite) await writeFuture;
+    await writeFuture;
+  });
+
+  static Future<File> _writeAtomicFile(File file, List<int> bytes) async {
+    await file.parent.create(recursive: true);
+    final staging = await file.parent.createTemp('.yc-file-');
+    try {
+      final input = File(p.join(staging.path, 'value'));
+      await input.writeAsBytes(bytes, flush: true);
+      if (!canWriteAccount) throw StateError('筆記帳號或權限已變更。');
+      return await input.rename(file.path);
+    } finally {
+      if (staging.existsSync()) await staging.delete(recursive: true);
+    }
   }
 
-  static Future<void> createFolder(String folderPath) async {
-    folderPath = _sanitisePath(folderPath);
-
-    final dir = Directory(documentsDirectory + folderPath);
-    await dir.create(recursive: true);
+  static List<String> _sidecars(String notebook) {
+    final main = getFile(notebook);
+    if (!main.parent.existsSync()) return [];
+    final pattern = RegExp(
+      '^${RegExp.escape(p.basename(notebook))}\\.(?:[0-9]+|p|pdf|pdf\\.json)\$',
+    );
+    return main.parent
+        .listSync(followLinks: false)
+        .whereType<File>()
+        .where((file) => pattern.hasMatch(p.basename(file.path)))
+        .map((file) => '$notebook${file.path.substring(main.path.length)}')
+        .toList();
   }
+
+  static Future<void> _publishFiles(Map<String, File?> files) async {
+    if (!canWriteAccount) throw StateError('筆記帳號或權限已變更。');
+    await YcLocalBatch(documentsDirectory).apply(
+      files,
+      onProgress: (_) {
+        if (!canWriteAccount) throw StateError('筆記帳號或權限已變更。');
+      },
+    );
+    for (final entry in files.entries) {
+      if (entry.value == null) {
+        await _removeReferences(entry.key);
+      } else {
+        await _saveFileAsRecentlyAccessed(entry.key);
+      }
+      broadcastFileWrite(
+        entry.value == null
+            ? FileOperationType.delete
+            : FileOperationType.write,
+        entry.key,
+      );
+    }
+    ycSync.schedule();
+  }
+
+  static Future<void> writeFiles(Map<String, List<int>?> changes) =>
+      YcFileCoordinator.run(() async {
+        if (!canWriteAccount) return;
+        await Directory(documentsDirectory).create(recursive: true);
+        final staging = await Directory(documentsDirectory)
+            .createTemp('.yc-input-');
+        try {
+          final files = <String, File?>{};
+          for (final change in changes.entries) {
+            if (change.value == null) {
+              files[change.key] = null;
+            } else {
+              final file = File(p.join(staging.path, '${files.length}'));
+              await file.writeAsBytes(change.value!, flush: true);
+              files[change.key] = file;
+            }
+          }
+          await _publishFiles(files);
+        } finally {
+          if (staging.existsSync()) await staging.delete(recursive: true);
+        }
+      });
+
+  /// Save one immutable notebook generation. Unchanged file-backed assets are
+  /// reused without reading or rewriting large PDFs on every pen autosave.
+  static Future<void> writeNotebook(
+    String path,
+    List<int> notebook,
+    List<({File? source, Future<List<int>> Function() readBytes})> assets,
+  ) => YcFileCoordinator.run(() async {
+    if (!canWriteAccount) throw StateError('筆記帳號或權限已變更。');
+    await Directory(documentsDirectory).create(recursive: true);
+    final staging = await Directory(documentsDirectory)
+        .createTemp('.yc-input-');
+    try {
+      final main = File(p.join(staging.path, 'main'));
+      await main.writeAsBytes(notebook, flush: true);
+      final files = <String, File?>{};
+      for (var i = 0; i < assets.length; i++) {
+        final asset = assets[i];
+        final target = '$path.$i';
+        if (asset.source case final File source) {
+          if (p.equals(source.path, getFile(target).path) &&
+              source.existsSync())
+            continue;
+          files[target] = source;
+        } else {
+          final source = File(p.join(staging.path, '$i'));
+          await source.writeAsBytes(await asset.readBytes(), flush: true);
+          files[target] = source;
+        }
+      }
+      for (final old in _sidecars(path)) {
+        final index = int.tryParse(old.substring(path.length + 1));
+        if (index != null && index >= assets.length) files[old] = null;
+      }
+      if (path.endsWith(Editor.extension)) {
+        final legacy =
+            '${path.substring(0, path.length - Editor.extension.length)}${Editor.extensionOldJson}';
+        if (getFile(legacy).existsSync()) files[legacy] = null;
+      }
+      files[path] = main;
+      await _publishFiles(files);
+    } finally {
+      if (staging.existsSync()) await staging.delete(recursive: true);
+    }
+  });
+
+  static Future<void> createFolder(String folderPath) =>
+      YcFileCoordinator.run(() async {
+        if (!canWriteAccount) return;
+        folderPath = _sanitisePath(folderPath);
+
+        final dir = Directory(documentsDirectory + folderPath);
+        await dir.create(recursive: true);
+      });
 
   static Future exportFile(
     String fileName,
@@ -376,7 +512,8 @@ class FileManager {
     String toPath, {
     bool replaceExistingFile = false,
     bool alsoMoveAssets = true,
-  }) async {
+  }) => YcFileCoordinator.run(() async {
+    if (!canWriteAccount) return fromPath;
     fromPath = _sanitisePath(fromPath);
     toPath = _sanitisePath(toPath);
 
@@ -395,153 +532,98 @@ class FileManager {
     if (fromPath == toPath) return toPath;
 
     final fromFile = getFile(fromPath);
-    final toFile = getFile(toPath);
-    await _createFileDirectory(toPath);
-    if (fromFile.existsSync()) {
-      await fromFile.rename(toFile.path);
-    } else {
-      log.warning('Tried to move non-existent file from $fromPath to $toPath');
-    }
-
-    syncer.uploader.enqueueRel(fromPath);
-    syncer.uploader.enqueueRel(toPath);
-
-    _renameReferences(fromPath, toPath);
-    broadcastFileWrite(FileOperationType.delete, fromPath);
-    broadcastFileWrite(FileOperationType.write, toPath);
-
+    if (!fromFile.existsSync()) return fromPath;
+    final files = <String, File?>{toPath: fromFile, fromPath: null};
     if (alsoMoveAssets && !assetFileRegex.hasMatch(fromPath)) {
-      final assets = <String>[];
-      for (int assetNumber = 0; true; assetNumber++) {
-        final assetFile = getFile('$fromPath.$assetNumber');
-        if (assetFile.existsSync()) {
-          assets.add('$assetNumber');
-        } else {
-          break;
-        }
+      for (final asset in _sidecars(fromPath)) {
+        files['$toPath${asset.substring(fromPath.length)}'] = getFile(asset);
+        files[asset] = null;
       }
-      {
-        const assetNumber = 'p';
-        final assetFile = getFile('$fromPath.$assetNumber');
-        if (assetFile.existsSync()) {
-          assets.add(assetNumber);
-        }
-      }
-
-      await Future.wait([
-        for (final assetNumber in assets)
-          moveFile(
-            '$fromPath.$assetNumber',
-            '$toPath.$assetNumber',
-            replaceExistingFile: replaceExistingFile,
-          ),
-      ]);
     }
+    await _publishFiles(files);
+    await _renameReferences(fromPath, toPath);
 
     return toPath;
-  }
+  });
 
   static Future deleteFile(
     String filePath, {
     bool alsoUpload = true,
     bool alsoDeleteAssets = true,
-  }) async {
+  }) => YcFileCoordinator.run(() async {
+    if (!canWriteAccount) return;
     filePath = _sanitisePath(filePath);
 
-    final file = getFile(filePath);
-    if (!file.existsSync()) return;
-    await file.delete();
-
-    if (alsoUpload) syncer.uploader.enqueueRel(filePath);
-
-    _removeReferences(filePath);
-    broadcastFileWrite(FileOperationType.delete, filePath);
-
+    final files = <String, File?>{filePath: null};
     if (alsoDeleteAssets && !assetFileRegex.hasMatch(filePath)) {
-      final assets = <int>[];
-      for (int assetNumber = 0; true; assetNumber++) {
-        final assetFile = getFile('$filePath.$assetNumber');
-        if (assetFile.existsSync()) {
-          assets.add(assetNumber);
-        } else {
-          break;
+      for (final asset in _sidecars(filePath)) files[asset] = null;
+    }
+    await _publishFiles(files);
+  });
+
+  static Future removeUnusedAssets(String filePath, {required int numAssets}) =>
+      YcFileCoordinator.run(() async {
+        if (!canWriteAccount) return;
+        final files = <String, File?>{};
+        for (final asset in _sidecars(filePath)) {
+          final index = int.tryParse(asset.substring(filePath.length + 1));
+          if (index != null && index >= numAssets) files[asset] = null;
         }
-      }
+        if (files.isNotEmpty) await _publishFiles(files);
+      });
 
-      final previewFile = getFile('$filePath.p');
-      await Future.wait([
-        for (final assetNumber in assets)
-          deleteFile('$filePath.$assetNumber', alsoDeleteAssets: false),
-        if (previewFile.existsSync())
-          deleteFile('$filePath.p', alsoDeleteAssets: false),
-      ]);
-    }
-  }
+  static Future renameDirectory(String directoryPath, String newName) =>
+      YcFileCoordinator.run(() async {
+        if (!canWriteAccount) return;
+        directoryPath = _sanitisePath(directoryPath);
 
-  static Future removeUnusedAssets(
-    String filePath, {
-    required int numAssets,
-  }) async {
-    final futures = <Future>[];
+        final directory = Directory(documentsDirectory + directoryPath);
+        if (!directory.existsSync()) return;
 
-    for (int assetNumber = numAssets; true; assetNumber++) {
-      final assetPath = '$filePath.$assetNumber';
-      if (getFile(assetPath).existsSync()) {
-        futures.add(deleteFile(assetPath));
-      } else {
-        break;
-      }
-    }
+        /// recursively find children of [directory] for [_renameReferences]
+        final List<String> children = [];
+        await for (final entity in directory.list(recursive: true)) {
+          if (entity is File) {
+            children.add(entity.path.substring(directory.path.length));
+          }
+        }
 
-    await Future.wait(futures);
-  }
+        final String newPath =
+            directoryPath.substring(0, directoryPath.lastIndexOf('/') + 1) +
+            newName;
+        await directory.rename(documentsDirectory + newPath);
 
-  static Future renameDirectory(String directoryPath, String newName) async {
-    directoryPath = _sanitisePath(directoryPath);
-
-    final directory = Directory(documentsDirectory + directoryPath);
-    if (!directory.existsSync()) return;
-
-    /// recursively find children of [directory] for [_renameReferences]
-    final List<String> children = [];
-    await for (final entity in directory.list(recursive: true)) {
-      if (entity is File) {
-        children.add(entity.path.substring(directory.path.length));
-      }
-    }
-
-    final String newPath =
-        directoryPath.substring(0, directoryPath.lastIndexOf('/') + 1) +
-        newName;
-    await directory.rename(documentsDirectory + newPath);
-
-    for (final child in children) {
-      _renameReferences(directoryPath + child, newPath + child);
-      broadcastFileWrite(FileOperationType.delete, directoryPath + child);
-      broadcastFileWrite(FileOperationType.write, newPath + child);
-    }
-  }
+        for (final child in children) {
+          _renameReferences(directoryPath + child, newPath + child);
+          broadcastFileWrite(FileOperationType.delete, directoryPath + child);
+          broadcastFileWrite(FileOperationType.write, newPath + child);
+        }
+      });
 
   static Future deleteDirectory(
     String directoryPath, [
     bool recursive = true,
-  ]) async {
+  ]) => YcFileCoordinator.run(() async {
+    if (!canWriteAccount) return;
     directoryPath = _sanitisePath(directoryPath);
 
     final directory = Directory(documentsDirectory + directoryPath);
     if (!directory.existsSync()) return;
 
     if (recursive) {
-      // call [deleteFile] on all files that are descendants of the directory
-      await for (final entity in directory.list(recursive: true)) {
-        if (entity is File) {
-          await deleteFile(entity.path.substring(documentsDirectory.length));
-        }
+      final files = <String, File?>{};
+      await for (final entity in directory.list(
+        recursive: true,
+        followLinks: false,
+      )) {
+        if (entity is File)
+          files[entity.path.substring(documentsDirectory.length)] = null;
       }
+      await _publishFiles(files);
     }
 
     await directory.delete(recursive: recursive);
-  }
+  });
 
   /// Gets the children of a directory, separated into
   /// [DirectoryChildren.directories] and [DirectoryChildren.files].
@@ -581,6 +663,8 @@ class FileManager {
         .list()
         .map((FileSystemEntity entity) {
           final filePath = entity.path.substring(documentsDirectory.length);
+          if (filePath.split('/').any((part) => part.startsWith('.')))
+            return null;
 
           // directories don't need any further processing
           if (entity is Directory) return filePath;
@@ -804,26 +888,23 @@ class FileManager {
     String? parentDir, {
     String? extension,
     bool awaitWrite = true,
-  }) async {
+  }) => YcFileCoordinator.run(() async {
+    if (!canWriteAccount) return null;
     assert(
       parentDir == null || parentDir.startsWith('/') && parentDir.endsWith('/'),
     );
 
-    if (extension == null) {
-      extension = '.${path.split('.').last}';
-      assert(extension.length > 1);
-    } else {
-      assert(extension.startsWith('.')); // extension must start with a dot
-    }
+    final fileExtension = extension ?? '.${path.split('.').last}';
+    assert(fileExtension.length > 1 && fileExtension.startsWith('.'));
 
     /// The file name without its extension
     String fileName = path.split(RegExp(r'[\\/]')).last;
     fileName = fileName.substring(0, fileName.lastIndexOf('.'));
     final String importedPath;
 
-    final writeFutures = <Future>[];
+    final imported = <String, List<int>?>{};
 
-    if (extension.toLowerCase() == '.sba') {
+    if (fileExtension.toLowerCase() == '.sba') {
       final inputStream = InputFileStream(path);
       final archive = ZipDecoder().decodeStream(inputStream);
 
@@ -848,13 +929,7 @@ class FileManager {
         mainFile.writeContent(output);
         return output.getBytes();
       }();
-      writeFutures.add(
-        writeFile(
-          importedPath + mainFileExtension,
-          mainFileContents,
-          awaitWrite: awaitWrite,
-        ),
-      );
+      imported[importedPath + mainFileExtension] = mainFileContents;
 
       // now import assets
       for (final file in archive.files) {
@@ -871,13 +946,7 @@ class FileManager {
           file.writeContent(output);
           return output.getBytes();
         }();
-        writeFutures.add(
-          writeFile(
-            '$importedPath$mainFileExtension.$assetNumber',
-            assetBytes,
-            awaitWrite: awaitWrite,
-          ),
-        );
+        imported['$importedPath$mainFileExtension.$assetNumber'] = assetBytes;
       }
     } else {
       // import sbn or sbn2
@@ -885,21 +954,15 @@ class FileManager {
       final fileContents = await file.readAsBytes();
       importedPath = await suffixFilePathToMakeItUnique(
         '${parentDir ?? '/'}$fileName',
-        intendedExtension: extension.toLowerCase(),
+        intendedExtension: fileExtension.toLowerCase(),
       );
-      writeFutures.add(
-        writeFile(
-          importedPath + extension.toLowerCase(),
-          fileContents,
-          awaitWrite: awaitWrite,
-        ),
-      );
+      imported[importedPath + fileExtension.toLowerCase()] = fileContents;
     }
 
-    await Future.wait(writeFutures);
+    await writeFiles(imported);
 
     return importedPath;
-  }
+  });
 
   /// Creates the parent directories of filePath if they don't exist.
   static Future _createFileDirectory(String filePath) async {

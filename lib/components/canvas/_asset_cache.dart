@@ -153,6 +153,10 @@ class OrderedAssetCache {
   bool get isEmpty => _cache.isEmpty;
   bool get isNotEmpty => _cache.isNotEmpty;
 
+  /// Existing file-backed assets can be retained without decoding their bytes.
+  File? getFile(int index) =>
+      _cache[index] is File ? _cache[index] as File : null;
+
   /// Converts the item at position [index]
   /// to bytes and returns them.
   Future<List<int>> getBytes(int index) async {

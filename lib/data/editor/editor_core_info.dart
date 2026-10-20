@@ -17,6 +17,7 @@ import 'package:saber/data/file_manager/file_manager.dart';
 import 'package:saber/data/flavor_config.dart';
 import 'package:saber/data/prefs.dart';
 import 'package:saber/data/tools/stroke_properties.dart';
+import 'package:saber/data/yc_note/account.dart';
 import 'package:saber/pages/editor/editor.dart';
 import 'package:sbn/canvas_background_pattern.dart';
 import 'package:sbn/has_size.dart';
@@ -57,7 +58,9 @@ class EditorCoreInfo {
 
   /// Whether the note is read-only.
   /// See [readOnlyReason] for the reason.
-  bool get readOnly => readOnlyReason != null;
+  var accountDetached = false;
+  bool get readOnly =>
+      accountDetached || readOnlyReason != null || ycAccount.isReadOnly;
 
   String filePath;
 
@@ -75,7 +78,7 @@ class EditorCoreInfo {
   /// Stores the current page index so that it can be restored when the file is reloaded.
   int? initialPageIndex;
 
-  static final placeholder =
+  factory placeholder() =>
       EditorCoreInfo._(
         filePath: '',
         readOnlyReason: .placeholder,
@@ -405,6 +408,7 @@ class EditorCoreInfo {
             await FileManager.init(
               documentsDirectory: documentsDirectory,
               shouldWatchRootDirectory: false,
+              recoverTransactions: false,
             );
             StrokeOptionsExtension.setDefaults();
             return isolate();
@@ -555,6 +559,6 @@ class EditorCoreInfo {
       pages: pages ?? this.pages,
       initialPageIndex: initialPageIndex,
       assetCache: assetCache,
-    );
+    )..accountDetached = accountDetached;
   }
 }

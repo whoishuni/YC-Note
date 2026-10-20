@@ -120,7 +120,7 @@ class _Translations$settings$fa extends Translations$settings$en {
 	@override late final _Translations$settings$customDataDir$fa customDataDir = _Translations$settings$customDataDir$fa._(_root);
 	@override String get autosaveDisabled => 'هرگز';
 	@override String get shapeRecognitionDisabled => 'هرگز';
-	@override String get openDataDir => 'پوشه Saber را باز کنید';
+	@override String get openDataDir => 'پوشه YC Note را باز کنید';
 	@override String get resyncEverything => 'همه چیز را دوباره همگام سازی کنید';
 }
 
@@ -468,7 +468,7 @@ class _Translations$settings$prefDescriptions$fa extends Translations$settings$p
 
 	// Translations
 	@override String get hyperlegibleFont => 'خوانایی را برای خوانندگان کم بینا افزایش می دهد';
-	@override String get allowInsecureConnections => '(توصیه نمی شود) به Saber اجازه دهید به سرورهایی با گواهینامه های خودامضا/غیر قابل اعتماد متصل شود';
+	@override String get allowInsecureConnections => '(توصیه نمی شود) به YC Note اجازه دهید به سرورهایی با گواهینامه های خودامضا/غیر قابل اعتماد متصل شود';
 	@override String get preferGreyscale => 'برای نمایشگر های e-ink';
 	@override String get autoClearWhiteboardOnExit => 'همچنان با دستگاه‌های دیگر شما همگام‌سازی می‌شود';
 	@override String get disableEraserAfterUse => 'پس از استفاده از پاک کن به صورت خودکار به خودکار برمی گردد';
@@ -580,7 +580,7 @@ class _Translations$login$ncLoginStep$fa extends Translations$login$ncLoginStep$
 	// Translations
 	@override late final _Translations$login$ncLoginStep$loginFlow$fa loginFlow = _Translations$login$ncLoginStep$loginFlow$fa._(_root);
 	@override String get whereToStoreData => 'محل ذخیره داده های خود را انتخاب کنید:';
-	@override String get saberNcServer => 'سرور Nextcloud Saber';
+	@override String get saberNcServer => 'سرور Nextcloud YC Note';
 	@override String get otherNcServer => 'سرور Nextcloud دیگر';
 	@override String get serverUrl => 'آدرس سرور';
 	@override String get loginWithSaber => 'با صابر وارد شوید';
@@ -637,7 +637,7 @@ class _Translations$profile$faq$1$fa extends Translations$profile$faq$1$en {
 
 	// Translations
 	@override String get q => 'چگونه رمز عبور Nextcloud خود را تغییر دهم؟';
-	@override String get a => 'به وب سایت سرور خود بروید و وارد شوید. سپس به تنظیمات > امنیت > تغییر رمز عبور بروید. پس از تغییر رمز عبور، باید از سیستم خارج شوید و دوباره وارد Saber شوید.';
+	@override String get a => 'به وب سایت سرور خود بروید و وارد شوید. سپس به تنظیمات > امنیت > تغییر رمز عبور بروید. پس از تغییر رمز عبور، باید از سیستم خارج شوید و دوباره وارد YC Note شوید.';
 }
 
 // Path: profile.faq.2
@@ -648,7 +648,7 @@ class _Translations$profile$faq$2$fa extends Translations$profile$faq$2$en {
 
 	// Translations
 	@override String get q => 'چگونه رمز رمزگذاری خود را تغییر دهم؟';
-	@override String get a => '1. از Saber خارج شوید. قبل از خروج از سیستم مطمئن شوید که همگام‌سازی کامل شده است تا هیچ داده‌ای را از دست ندهید (پیشرفت همگام‌سازی را در صفحه اصلی ببینید).\n2. به وب سایت سرور خود بروید و پوشه \'Saber\' خود را حذف کنید. با این کار تمام یادداشت های شما از سرور حذف می شود.\n3. دوباره وارد سابر شوید. هنگام ورود به سیستم می‌توانید رمز رمزگذاری جدیدی انتخاب کنید.\n4. فراموش نکنید که از سیستم خارج شوید و در دستگاه های دیگر خود نیز دوباره وارد Saber شوید.';
+	@override String get a => '1. از YC Note خارج شوید. قبل از خروج از سیستم مطمئن شوید که همگام‌سازی کامل شده است تا هیچ داده‌ای را از دست ندهید (پیشرفت همگام‌سازی را در صفحه اصلی ببینید).\n2. به وب سایت سرور خود بروید و پوشه \'YC Note\' خود را حذف کنید. با این کار تمام یادداشت های شما از سرور حذف می شود.\n3. دوباره وارد سابر شوید. هنگام ورود به سیستم می‌توانید رمز رمزگذاری جدیدی انتخاب کنید.\n4. فراموش نکنید که از سیستم خارج شوید و در دستگاه های دیگر خود نیز دوباره وارد YC Note شوید.';
 }
 
 // Path: profile.faq.3
@@ -659,7 +659,7 @@ class _Translations$profile$faq$3$fa extends Translations$profile$faq$3$en {
 
 	// Translations
 	@override String get q => 'چگونه می توانم حساب کاربری خود را حذف کنم؟';
-	@override String get a => 'روی دکمه "${_root.profile.quickLinks.deleteAccount}" در بالا ضربه بزنید و در صورت نیاز وارد شوید.\nاگر از سرور رسمی Saber استفاده می‌کنید، حساب شما پس از یک هفته مهلت حذف می‌شود. می‌توانید در این مدت با من در adilhanney@disroot.org تماس بگیرید تا حذف را لغو کنید.\nاگر از یک سرور شخص ثالث استفاده می‌کنید، ممکن است گزینه‌ای برای حذف حساب شما وجود نداشته باشد: باید با حفظ حریم خصوصی سرور مشورت کنید. سیاست برای اطلاعات بیشتر';
+	@override String get a => 'روی دکمه "${_root.profile.quickLinks.deleteAccount}" در بالا ضربه بزنید و در صورت نیاز وارد شوید.\nاگر از سرور رسمی YC Note استفاده می‌کنید، حساب شما پس از یک هفته مهلت حذف می‌شود. می‌توانید در این مدت با من در adilhanney@disroot.org تماس بگیرید تا حذف را لغو کنید.\nاگر از یک سرور شخص ثالث استفاده می‌کنید، ممکن است گزینه‌ای برای حذف حساب شما وجود نداشته باشد: باید با حفظ حریم خصوصی سرور مشورت کنید. سیاست برای اطلاعات بیشتر';
 }
 
 // Path: editor.toolbar
@@ -904,7 +904,7 @@ class _Translations$login$ncLoginStep$loginFlow$fa extends Translations$login$nc
 	final TranslationsFa _root; // ignore: unused_field
 
 	// Translations
-	@override String get pleaseAuthorize => 'لطفاً به Saber اجازه دسترسی به حساب Nextcloud شما را بدهید';
+	@override String get pleaseAuthorize => 'لطفاً به YC Note اجازه دسترسی به حساب Nextcloud شما را بدهید';
 	@override String get followPrompts => 'لطفاً دستورات موجود در مرورگر خود را دنبال کنید.';
 	@override String get browserDidntOpen => 'مرورگر باز نشد';
 }

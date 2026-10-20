@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
@@ -7,11 +6,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:image/image.dart' as im;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:pool/pool.dart';
 import 'package:saber/components/canvas/_circle_stroke.dart';
 import 'package:saber/components/canvas/_rectangle_stroke.dart';
 import 'package:saber/components/canvas/_stroke.dart';
 import 'package:saber/components/canvas/canvas_preview.dart';
+import 'package:saber/components/canvas/image/editor_image.dart';
 import 'package:saber/components/canvas/inner_canvas.dart';
 import 'package:saber/data/editor/editor_core_info.dart';
 import 'package:saber/data/is_this_a_test.dart';
@@ -29,10 +28,10 @@ abstract class EditorExporter {
   }
 
   static Future<pw.Document> generatePdf(
-    EditorCoreInfo coreInfo,
-    BuildContext context,
-  ) async {
-    if (coreInfo.pages.isNotEmpty && coreInfo.pages.last.isEmpty) {
+    EditorCoreInfo coreInfo, [
+    BuildContext? context,
+  ]) async {
+    if (coreInfo.pages.length > 1 && coreInfo.pages.last.isEmpty) {
       // don't export the empty last page
       coreInfo = coreInfo.copyWith(
         pages: coreInfo.pages.toList()..removeLast(),
@@ -41,36 +40,29 @@ abstract class EditorExporter {
 
     final pdf = pw.Document();
 
-    // screenshot each page
-    final pool = Pool((Platform.numberOfProcessors ~/ 2).clamp(1, 4));
-    final pageScreenshots = await Future.wait(
-      List.generate(
-        coreInfo.pages.length,
-        (pageIndex) => pool.withResource(() async {
-          final uiImage = await screenshotPage(
-            coreInfo: coreInfo,
-            pageIndex: pageIndex,
-          );
-          final byteData = await uiImage.toByteData(
-            format: ui.ImageByteFormat.rawRgba,
-          );
-          assert(
-            byteData != null,
-            'Judging by the code, this should never be null.',
-          );
-          final imImage = im.Image.fromBytes(
-            width: uiImage.width,
-            height: uiImage.height,
-            bytes: byteData!.buffer,
-            order: im.ChannelOrder.rgba,
-          );
-          uiImage.dispose();
-          return imImage;
-        }),
-      ),
-    );
-
-    for (int pageIndex = 0; pageIndex < pageScreenshots.length; ++pageIndex) {
+    for (var pageIndex = 0; pageIndex < coreInfo.pages.length; pageIndex++) {
+      final uiImage = await screenshotPage(
+        coreInfo: coreInfo,
+        pageIndex: pageIndex,
+        requireAllImages: true,
+      );
+      final pw.MemoryImage background;
+      try {
+        final data = await uiImage.toByteData(
+          format: ui.ImageByteFormat.rawRgba,
+        );
+        if (data == null) throw StateError('Could not render PDF page');
+        final bitmap = im.Image.fromBytes(
+          width: uiImage.width,
+          height: uiImage.height,
+          bytes: data.buffer,
+          order: im.ChannelOrder.rgba,
+        );
+        // Keep compressed pages instead of retaining every full RGBA bitmap.
+        background = pw.MemoryImage(im.encodePng(bitmap));
+      } finally {
+        uiImage.dispose();
+      }
       final page = coreInfo.pages[pageIndex];
       final pageSize = page.size;
       pdf.addPage(
@@ -135,7 +127,7 @@ abstract class EditorExporter {
                   }
                 },
                 child: pw.Image(
-                  pw.ImageImage(pageScreenshots[pageIndex]),
+                  background,
                   width: pageSize.width,
                   height: pageSize.height,
                 ),
@@ -147,6 +139,29 @@ abstract class EditorExporter {
     }
 
     return pdf;
+  }
+
+  static Future<VoidCallback> _holdDecodedImage(ImageProvider provider) async {
+    final stream = provider.resolve(ImageConfiguration.empty);
+    final ready = Completer<void>();
+    late ImageStreamListener listener;
+    listener = ImageStreamListener(
+      (info, synchronous) {
+        info.dispose();
+        if (!ready.isCompleted) ready.complete();
+      },
+      onError: (Object error, StackTrace? stack) {
+        if (!ready.isCompleted) ready.completeError(error, stack);
+      },
+    );
+    stream.addListener(listener);
+    try {
+      await ready.future.timeout(const Duration(seconds: 30));
+      return () => stream.removeListener(listener);
+    } catch (_) {
+      stream.removeListener(listener);
+      rethrow;
+    }
   }
 
   /// Returns a screenshot of the page at [pageIndex] in [coreInfo].
@@ -164,6 +179,7 @@ abstract class EditorExporter {
     Size? targetSize,
     double? cropHeight,
     double pixelRatio = 2,
+    bool requireAllImages = false,
   }) async {
     final page = coreInfo.pages[pageIndex].cloneForRasterization(
       rasterizeAllStrokes: rasterizeAllStrokes,
@@ -173,10 +189,41 @@ abstract class EditorExporter {
       ?page.backgroundImage,
       ...page.images,
     ].where((image) => !image.loadedIn).toList(growable: false);
-    await Future.wait(imagesToLoad.map((image) => image.loadIn()))
-        .timeout(const Duration(seconds: 10), onTimeout: () => const []);
-
+    final releaseImages = <VoidCallback>[];
+    final rasterImages = <EditorImage>[];
     try {
+      final loading = Future.wait(imagesToLoad.map((image) => image.loadIn()));
+      if (requireAllImages) {
+        await loading.timeout(const Duration(seconds: 30));
+      } else {
+        await loading.timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => const [],
+        );
+      }
+      if (requireAllImages) {
+        Future<EditorImage> prepare(EditorImage image) async {
+          final EditorImage ready = switch (image) {
+            final PdfEditorImage pdf => await pdf.exportRaster(),
+            final SvgEditorImage svg => await svg.exportRaster(),
+            _ => image,
+          };
+          if (!identical(ready, image)) {
+            rasterImages.add(ready);
+            await ready.loadIn();
+          }
+          if (ready is PngEditorImage && ready.imageProvider != null) {
+            releaseImages.add(await _holdDecodedImage(ready.imageProvider!));
+          }
+          return ready;
+        }
+
+        if (page.backgroundImage != null)
+          page.backgroundImage = await prepare(page.backgroundImage!);
+        for (var i = 0; i < page.images.length; i++) {
+          page.images[i] = await prepare(page.images[i]);
+        }
+      }
       targetSize ??= page.size;
       coreInfo = coreInfo.copyWith(
         pages: [for (var i = 0; i < coreInfo.pages.length; ++i) page],
@@ -195,6 +242,10 @@ abstract class EditorExporter {
         delay: isThisATest ? .zero : const Duration(milliseconds: 200),
       );
     } finally {
+      for (final release in releaseImages) release();
+      for (final image in rasterImages) {
+        image.dispose();
+      }
       for (final image in imagesToLoad) unawaited(image.loadOut());
       page.disposeClonedData();
     }

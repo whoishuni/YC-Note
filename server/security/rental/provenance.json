@@ -1,0 +1,38 @@
+{
+  "DictionaryDetector.php": {
+    "source": "Rental-management-system/includes/DictionaryDetector.php",
+    "sha256": "04eea950b477aeef9bb12ba21be6f0cd9b2c4556e7c884e21cb7019bb0e97df3"
+  },
+  "SecurityPipeline.php": {
+    "source": "Rental-management-system/includes/SecurityPipeline.php",
+    "sha256": "7d302784c8372bc97aace679ec3d24371e8c13fe8805b0567384cccb33e8b7ff"
+  },
+  "HttpSecurityPolicy.php": {
+    "source": "Rental-management-system/includes/HttpSecurityPolicy.php",
+    "sha256": "3c86ac79da363e8f296872e623c5edba38a34c7a46f7418d60d17a79b1bb6860"
+  },
+  "security.php": {
+    "source": "Rental-management-system/includes/security.php",
+    "sha256": "eab3b95501067fd229b6076f8e82dc44aca2603c0ce52a9898a734c94ac9bf43"
+  },
+  "EmojiPolicy.php": {
+    "source": "Rental-management-system/includes/EmojiPolicy.php",
+    "sha256": "6275ae57f6891a3b09d4c740c54693b3349ad8a190c3b6189a0b9225aba3367d"
+  },
+  "csrf.php": {
+    "source": "Rental-management-system/includes/csrf.php",
+    "sha256": "31817acd57517414fb9f0538f33510f96ca2e577b396e59f896f73df35863cad"
+  },
+  "GeoBlocker.php": {
+    "source": "Rental-management-system/includes/GeoBlocker.php",
+    "sha256": "90b065146ff2e025f1bbb1bf755d3da585bd34d135b799e7be847ad78d70fa1d"
+  },
+  "UploadSecurityScanner.php": {
+    "source": "Rental-management-system/includes/UploadSecurityScanner.php",
+    "sha256": "b8333815bf247865a25cab645443dc98e981b1048cfca2dbcf86fb974b6ddc6e"
+  },
+  "MaintenanceMode.php": {
+    "source": "Rental-management-system/includes/MaintenanceMode.php",
+    "sha256": "40df3870d4d040ca9096c730cc4fc8669acba214608c05cd9dcf2e58473595b0"
+  }
+}

@@ -150,6 +150,31 @@ class SvgEditorImage extends EditorImage {
     }
   }
 
+  Future<PngEditorImage> exportRaster() async {
+    await loadIn();
+    final info = await vg.loadPicture(svgLoader, null);
+    try {
+      final scale = min(2.0, 4096 / max(info.size.width, info.size.height));
+      final recorder = ui.PictureRecorder();
+      ui.Canvas(recorder)
+        ..scale(scale)
+        ..drawPicture(info.picture);
+      final picture = recorder.endRecording();
+      try {
+        return await rasterForExport(
+          await picture.toImage(
+            (info.size.width * scale).ceil(),
+            (info.size.height * scale).ceil(),
+          ),
+        );
+      } finally {
+        picture.dispose();
+      }
+    } finally {
+      info.picture.dispose();
+    }
+  }
+
   @override
   Future<void> loadIn() async => await super.loadIn();
 

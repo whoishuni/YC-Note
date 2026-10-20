@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:saber/components/theming/adaptive_alert_dialog.dart';
+import 'package:saber/data/yc_note/account.dart';
 import 'package:saber/i18n/strings.g.dart';
 
 class DeleteFolderButton extends StatelessWidget {
@@ -17,6 +18,7 @@ class DeleteFolderButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (ycAccount.isReadOnly) return const SizedBox.shrink();
     return IconButton(
       padding: .zero,
       tooltip: t.home.deleteFolder.deleteFolder,

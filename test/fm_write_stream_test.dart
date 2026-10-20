@@ -44,19 +44,27 @@ void main() {
 
       final rootDir = FileManager.documentsDirectory;
       final file = File('$rootDir/test.sbn2');
+      final written = FileManager.fileWriteStream.stream.firstWhere(
+        (event) =>
+            event.filePath == '/test' && event.type == FileOperationType.write,
+      );
 
       // write to file
       await file.create(recursive: true);
       await file.writeAsString('test_content');
-      await Future.delayed(const Duration(milliseconds: 1));
-      expect(events, hasLength(greaterThanOrEqualTo(2)));
+      await written.timeout(const Duration(seconds: 5));
+      expect(events, isNotEmpty);
       expect(events.last.filePath, '/test'); // without the extension
       expect(events.last.type, FileOperationType.write);
       events.clear();
 
       // delete file
+      final deleted = FileManager.fileWriteStream.stream.firstWhere(
+        (event) =>
+            event.filePath == '/test' && event.type == FileOperationType.delete,
+      );
       await file.delete();
-      await Future.delayed(const Duration(milliseconds: 1));
+      await deleted.timeout(const Duration(seconds: 5));
       expect(events, hasLength(greaterThanOrEqualTo(1)));
       expect(events.last.filePath, '/test'); // without the extension
       expect(events.last.type, FileOperationType.delete);

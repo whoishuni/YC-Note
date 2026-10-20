@@ -1,142 +1,27 @@
-# <img src="https://github.com/saber-notes/saber/raw/main/assets/icon/icon.png" width="30" height="30" alt="Logo"> Saber
+# YC Note
 
-[<img src='https://github.com/saber-notes/saber/blob/main/assets_raw/badges/google-play-badge.svg'
-    alt='Get it on Google Play'
-    height=50>][google_play]
-&nbsp;
-[<img src="https://github.com/saber-notes/saber/blob/main/assets_raw/badges/f-droid-badge.svg"
-    alt="Get it on F-Droid"
-    height=50>][f-droid]
-&nbsp;
-[<img src="https://github.com/saber-notes/saber/blob/main/assets_raw/badges/app-store-badge.svg"
-    alt="Download on the App Store"
-    height=50>][app_store]
-&nbsp;
-[<img src="https://github.com/saber-notes/saber/blob/main/assets_raw/badges/windows-badge.png"
-    alt="Download for Windows"
-    height=50>][download_windows]
-&nbsp;
-[<img src="https://github.com/saber-notes/saber/blob/main/assets_raw/badges/flathub-badge.svg"
-    alt="Download on Flathub"
-    height=50>][flathub]
-&nbsp;
-[<img src="https://github.com/saber-notes/saber/blob/main/assets_raw/badges/appimage-logo.svg"
-    alt="Get it as an AppImage"
-    height=50>][download_appimage]
+YC Note 深度整合租屋系統的帳號、權限與私人筆記儲存。iPad 目前改用 [Saber 官方 App Store 版](https://apps.apple.com/app/id1671523739)，以相容登入與同步協定連入自有後台，無需自行每週簽署。
 
-[English](https://github.com/saber-notes/saber/blob/main/README.md) |
-[čeština](https://github.com/saber-notes/saber/blob/main/README-cs.md) |
-[Deutsch](https://github.com/saber-notes/saber/blob/main/README-de.md) |
-[中文 (简体中文, 中国)](https://github.com/saber-notes/saber/blob/main/README-zh-CN.md) |
-[中文 (繁體, 台灣)](https://github.com/saber-notes/saber/blob/main/README-zh-TW.md) |
-[العربية](https://github.com/saber-notes/saber/blob/main/README-ar.md) |
-[Tiếng Việt](https://github.com/saber-notes/saber/blob/main/README-vi.md) |
-[Bahasa Indonesia](https://github.com/saber-notes/saber/blob/main/README-id.md)
+本 repo 保留由 [Saber](https://github.com/saber-notes/saber) fork 的原 YC Note Flutter/Dart 客戶端、格式與既有筆記；其本機唯讀、原子同步及網站 PDF 功能屬於自訂客戶端，不能視為官方版已有相同功能。自訂程式不新增 AI。
 
-Saber is the notes app built for handwriting.
+![YC Note](assets/icon/resized/icon-128x128.png)
 
-It's designed to be as simple and intuitive as possible, while still delivering unique features that you'll actually use. Additionally, Saber is available across all your devices, large and small, and syncs between them seamlessly.
+管理：[租屋系統 YC Note](https://yckuo.com/rent/admin/notes.php)（舊 `/yc_note/` 會轉入）
 
-Notably, it can invert your notes when you're in dark mode. This allows you to write with white ink on a black background, which is much easier on the eyes in low-light environments like when the teacher turns off the lights in class.
-Images and PDFs are also inverted, so you can still use a digital printout or a textbook without the fuss.
+- 深度整合租屋系統的登入、導覽與管理流程，只使用租屋管理員帳號。
+- 超級管理員管理授權，一般管理員須開放筆記權限；首次裝置核准、後續自動續期。
+- 私有筆記儲存、歷史版本、檔案同步與衝突備份。
+- 原生管理頁、共用資安與維護模式，私有資料庫與檔案儲存。
 
-Saber uses a dual-password system to protect your notes from anyone but you, even if they have complete control over the server. You can safely store your notes on the official Saber server, another server, or even host your own!
+官方 Saber 的「其他 Nextcloud 伺服器」填入 `https://yckuo.com/rent/yc_note/saber`，由租屋網頁核准連線；雲端可唯讀或撤銷，官方 App 的本機編輯不受遠端限制。密文與加密設定以原樣儲存，網站可下載加密備份；在瀏覽器本頁解鎖後，可逐頁閱讀、下載 PDF 或可編輯原稿。密碼不傳到伺服器。
 
-The app is completely open-source so that anyone can view the source code and see exactly what it's doing and how it handles your data. Many other note-taking apps are closed-source and proprietary, meaning that their inner workings are a mystery to the public.
+以下為保留的自訂客戶端建置方式，建置需 Flutter 3.47.7 / Dart 3.13.5；iOS 編譯與簽署另需 Xcode。Dart 內部 package 名稱保留 `saber`，筆記格式保留 `.sbn2/.sba`。
 
-As someone who studies maths, highlighting multi-line equations was always a hassle with other apps, where the highlighter would change color when it overlapped with itself. Another problem I had was that in some apps, the highlighter would render on top of the text, fading it out and making it hard to read.
-Saber's highlighter has no such issues. It utilizes canvas compositing to render the highlighter in a way that is consistent with/better than traditional paper, where it handles overlaps and maintains color consistency.
+```sh
+flutter pub get
+flutter run --dart-define=YC_NOTE_SERVER=https://yckuo.com/yc_note
+```
 
-Saber has everything you need to keep your notes organized. Create folders inside folders inside folders to your heart's content with no limit on the number of nested folders. And even though a note may be buried deep within a nested folder, you can still access it easily with your most recent notes always available on the home screen.
+[部署與檔案清單](docs/DEPLOYMENT.md) · [功能路線與限制](docs/GOODNOTES-ROADMAP.md) · [進度](docs/STATUS.md) · [原始 README](README-upstream.md)
 
-Discover a whole new way to capture and organize your thoughts with Saber. Whether you're a student, professional, or creative mind, Saber is your trusted companion for digital handwriting. Download now and let your ideas flow freely!
-
-[![Latest release](https://img.shields.io/github/v/release/saber-notes/saber)](https://github.com/saber-notes/saber/releases/latest)
-[![Flathub](https://img.shields.io/flathub/v/com.adilhanney.saber)](https://flathub.org/apps/details/com.adilhanney.saber)
-[![F-Droid](https://img.shields.io/f-droid/v/com.adilhanney.saber)](https://f-droid.org/en/packages/com.adilhanney.saber/)
-[![GitHub downloads](https://img.shields.io/github/downloads/saber-notes/saber/total?label=GitHub%20downloads)](https://github.com/saber-notes/saber/releases)
-[![Flathub downloads](https://img.shields.io/flathub/downloads/com.adilhanney.saber?label=Flathub%20downloads)](https://flathub.org/apps/details/com.adilhanney.saber)
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/adil192)](https://github.com/sponsors/adil192)
-[![License](https://img.shields.io/github/license/saber-notes/saber)](https://github.com/saber-notes/saber/blob/main/LICENSE.md)
-[![Translation status](https://hosted.weblate.org/widget/saber-notes/saber/svg-badge.svg)](https://hosted.weblate.org/engage/saber-notes/)
-[![Codecov](https://codecov.io/gh/saber-notes/saber/branch/main/graph/badge.svg?token=EGQSN0THW2)](https://codecov.io/gh/saber-notes/saber)
-
-<details open>
-<summary>Tap to show/hide screenshots</summary>
-
-<div>
-<img src="https://github.com/saber-notes/saber/raw/main/metadata/en-US/images/phoneScreenshots/1_home.png" width="180">
-<img src="https://github.com/saber-notes/saber/raw/main/metadata/en-US/images/phoneScreenshots/2_editor.png" width="180">
-<img src="https://github.com/saber-notes/saber/raw/main/metadata/en-US/images/phoneScreenshots/3_login.png" width="180">
-<img src="https://github.com/saber-notes/saber/raw/main/metadata/en-US/images/phoneScreenshots/4_settings.png" width="180">
-</div>
-</details>
-
-## Features
-
-Please see [#1 Saber progress][progress].
-
-## Install
-
-Please see
-[Install Saber](https://github.com/saber-notes/saber/wiki/install)
-on the wiki.
-
-## Build from source
-
-Please see
-[Build Saber](https://github.com/saber-notes/saber/wiki/build)
-on the wiki.
-
-## Links
-
-- [Nextcloud server][nextcloud]
-- [Privacy policy][privacy]
-- [License][license]
-- [Releases][releases]
-
-## Translating
-
-All translations are thanks to our community of contributors.
-
-If you'd like to help out translating Saber, head to [Weblate](https://hosted.weblate.org/engage/saber-notes/)!
-
-[![Translation status](https://hosted.weblate.org/widget/saber-notes/multi-auto.svg)](https://hosted.weblate.org/engage/saber-notes/)
-
-Note: To avoid falling back to English, any gaps in the translations are filled
-in by machine translation until a human can contribute.
-
-## Supporting Saber
-
-If you like Saber, please consider supporting it by:
-- Spreading the word!
-- Starring the project on GitHub
-- Sponsoring me on [GitHub Sponsors](https://github.com/sponsors/adil192)
-- Donating via [PayPal](https://paypal.me/adilhanney)
-- Buying more storage on the Nextcloud server: see [Pricing](pricing.md)
-
-## Development notes
-
-Please see
-[Maintainer notes](https://github.com/saber-notes/saber/wiki/Maintainer-notes)
-on the wiki.
-
-
-[f-droid]: https://f-droid.org/packages/com.adilhanney.saber/
-[flathub]: https://flathub.org/apps/details/com.adilhanney.saber
-[google_play]: https://play.google.com/store/apps/details?id=com.adilhanney.saber
-[snap]: https://snapcraft.io/saber
-[app_store]: https://apps.apple.com/us/app/saber/id1671523739
-[download_windows]: https://github.com/saber-notes/saber/releases/download/v1.36.2/SaberInstaller_v1.36.2.exe
-[download_appimage]: https://github.com/saber-notes/saber/releases/download/v1.36.2/Saber-1.36.2-x86_64.AppImage
-
-[nextcloud]: https://nc.saber.adil.hanney.org/
-
-[privacy]: https://github.com/saber-notes/saber/blob/main/privacy_policy.md
-[license]: https://github.com/saber-notes/saber/blob/main/LICENSE.md
-
-[releases]: https://github.com/saber-notes/saber/releases
-[issues]: https://github.com/saber-notes/saber/issues
-[progress]: https://github.com/saber-notes/saber/discussions/1
-
-[f-droid-manifest]: https://gitlab.com/fdroid/fdroiddata/-/blob/master/metadata/com.adilhanney.saber.yml
+本專案保留 Saber 的 GPL-3.0 授權與原作者聲明。見 [LICENSE.md](LICENSE.md)。

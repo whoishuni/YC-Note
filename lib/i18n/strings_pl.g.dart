@@ -69,7 +69,7 @@ class _Translations$home$pl extends Translations$home$en {
 	@override late final _Translations$home$titles$pl titles = _Translations$home$titles$pl._(_root);
 	@override late final _Translations$home$tooltips$pl tooltips = _Translations$home$tooltips$pl._(_root);
 	@override late final _Translations$home$create$pl create = _Translations$home$create$pl._(_root);
-	@override String get welcome => 'Witaj w Saber';
+	@override String get welcome => 'Witaj w YC Note';
 	@override String get invalidFormat => 'Plik który wskazano nie jest wspierany. Proszę wybrać plik w formacie sbn, sbn2, sba, lub pdf.';
 	@override String get noFiles => 'Nie znaleziono plików';
 	@override String get noPreviewAvailable => 'Podgląd niedostępny';
@@ -118,7 +118,7 @@ class _Translations$settings$pl extends Translations$settings$en {
 	];
 	@override late final _Translations$settings$reset$pl reset = _Translations$settings$reset$pl._(_root);
 	@override String get resyncEverything => 'Synchronizuj wszystko';
-	@override String get openDataDir => 'Otwórz folder Saber';
+	@override String get openDataDir => 'Otwórz folder YC Note';
 	@override late final _Translations$settings$customDataDir$pl customDataDir = _Translations$settings$customDataDir$pl._(_root);
 	@override String get autosaveDisabled => 'Nigdy';
 	@override String get shapeRecognitionDisabled => 'Nigdy';
@@ -407,7 +407,7 @@ class _Translations$sentry$consent$pl extends Translations$sentry$consent$en {
 	final TranslationsPl _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Chcesz wesprzeć Saber?';
+	@override String get title => 'Chcesz wesprzeć YC Note?';
 	@override late final _Translations$sentry$consent$description$pl description = _Translations$sentry$consent$description$pl._(_root);
 	@override late final _Translations$sentry$consent$answers$pl answers = _Translations$sentry$consent$answers$pl._(_root);
 }
@@ -439,7 +439,7 @@ class _Translations$settings$prefLabels$pl extends Translations$settings$prefLab
 	@override String get layoutSize => 'Rodzaj układu';
 	@override String get customAccentColor => 'Niestandardowy kolor akcentu';
 	@override String get hyperlegibleFont => 'Czcionka Atkinson Hyperlegible';
-	@override String get shouldCheckForUpdates => 'Sprawdź dostępność aktualizacji Saber';
+	@override String get shouldCheckForUpdates => 'Sprawdź dostępność aktualizacji YC Note';
 	@override String get shouldAlwaysAlertForUpdates => 'Szybsze aktualizacje';
 	@override String get allowInsecureConnections => 'Zezwól na niezabezpieczone połączenia';
 	@override String get editorToolbarAlignment => 'Pozycja przybornika';
@@ -458,7 +458,7 @@ class _Translations$settings$prefLabels$pl extends Translations$settings$prefLab
 	@override String get autosave => 'Auto-zapis';
 	@override String get shapeRecognitionDelay => 'Opóźnienie rozpoznania symbolu';
 	@override String get autoStraightenLines => 'Automatycznie prostuj linie';
-	@override String get customDataDir => 'Niestandardowa lokalizacja Saber';
+	@override String get customDataDir => 'Niestandardowa lokalizacja YC Note';
 	@override String get sentry => 'Zgłaszanie błędów';
 }
 
@@ -470,7 +470,7 @@ class _Translations$settings$prefDescriptions$pl extends Translations$settings$p
 
 	// Translations
 	@override String get hyperlegibleFont => 'Zwiększenie czytelności dla użytkowników słabowidzących';
-	@override String get allowInsecureConnections => '(Nie zalecane) Zezwól Saber na połączenie z serwerami używając certyfikatów niezaufanych/z własnym podpisem';
+	@override String get allowInsecureConnections => '(Nie zalecane) Zezwól YC Note na połączenie z serwerami używając certyfikatów niezaufanych/z własnym podpisem';
 	@override String get preferGreyscale => 'Dla ekranów e-ink';
 	@override String get autoClearWhiteboardOnExit => 'Czyści tablice po wyjściu z aplikacji';
 	@override String get disableEraserAfterUse => 'Automatycznie przełącza na poprzednie narzędzie po skorzystaniu z gumki';
@@ -581,10 +581,10 @@ class _Translations$login$ncLoginStep$pl extends Translations$login$ncLoginStep$
 
 	// Translations
 	@override String get whereToStoreData => 'Wybierz gdzie przechowywać twoje dane:';
-	@override String get saberNcServer => 'Serwer Nextcloud Saber';
+	@override String get saberNcServer => 'Serwer Nextcloud YC Note';
 	@override String get otherNcServer => 'Inny serwer Nextcloud';
 	@override String get serverUrl => 'Serwer URL';
-	@override String get loginWithSaber => 'Zaloguj przez Saber';
+	@override String get loginWithSaber => 'Zaloguj przez YC Note';
 	@override String get loginWithNextcloud => 'Zaloguj przez Nextcloud';
 	@override late final _Translations$login$ncLoginStep$loginFlow$pl loginFlow = _Translations$login$ncLoginStep$loginFlow$pl._(_root);
 }
@@ -597,7 +597,7 @@ class _Translations$login$encLoginStep$pl extends Translations$login$encLoginSte
 
 	// Translations
 	@override String get enterEncPassword => 'Aby chronić twoje dane, podaj proszę hasło szyfrowania:';
-	@override String get newToSaber => 'Nowy w Saber? Utwórz nowe hasło szyfrowania.';
+	@override String get newToSaber => 'Nowy w YC Note? Utwórz nowe hasło szyfrowania.';
 	@override String get encPassword => 'Hasło szyfrowania';
 	@override String get encFaqTitle => 'Często zadawane pytania (FAQ)';
 	@override String get wrongEncPassword => 'Odszyfrowywanie przy użyciu podanego hasła nie powiodło się. Spróbuj wpisać je ponownie.';
@@ -639,7 +639,7 @@ class _Translations$profile$faq$1$pl extends Translations$profile$faq$1$en {
 
 	// Translations
 	@override String get q => 'Jak mogę zmienić hasło do Nextcloud?';
-	@override String get a => 'Wejdź na stronę swojego serwera i się zaloguj. Następnie przejdź do Settings > Security > Change password (Ustawienia > Bezpieczeństwo>Zmiana hasła). Po zmianie hasła należy wylogować się z serwera w Saber, a następnie zalogować ponownie za pomocą nowego hasła.';
+	@override String get a => 'Wejdź na stronę swojego serwera i się zaloguj. Następnie przejdź do Settings > Security > Change password (Ustawienia > Bezpieczeństwo>Zmiana hasła). Po zmianie hasła należy wylogować się z serwera w YC Note, a następnie zalogować ponownie za pomocą nowego hasła.';
 }
 
 // Path: profile.faq.2
@@ -650,7 +650,7 @@ class _Translations$profile$faq$2$pl extends Translations$profile$faq$2$en {
 
 	// Translations
 	@override String get q => 'Jak mogę zmienić moje hasło szyfrowania?';
-	@override String get a => '0. Upewnij się, że synchronizacja została zakończona (zobacz postęp synchronizacji na ekranie głównym).\n1. Wyloguj się z Saber.\n2. Przejdź na stronę swojego serwera i usuń folder \'Saber\'. Spowoduje to usunięcie wszystkich Twoich notatek z serwera.\n3. Zaloguj się ponownie do Saber. Podczas logowania możesz wybrać nowe hasło szyfrowania.\n4. Nie zapomnij wylogować się i zalogować ponownie do Saber również na swoich innych urządzeniach.';
+	@override String get a => '0. Upewnij się, że synchronizacja została zakończona (zobacz postęp synchronizacji na ekranie głównym).\n1. Wyloguj się z YC Note.\n2. Przejdź na stronę swojego serwera i usuń folder \'YC Note\'. Spowoduje to usunięcie wszystkich Twoich notatek z serwera.\n3. Zaloguj się ponownie do YC Note. Podczas logowania możesz wybrać nowe hasło szyfrowania.\n4. Nie zapomnij wylogować się i zalogować ponownie do YC Note również na swoich innych urządzeniach.';
 }
 
 // Path: profile.faq.3
@@ -661,7 +661,7 @@ class _Translations$profile$faq$3$pl extends Translations$profile$faq$3$en {
 
 	// Translations
 	@override String get q => 'Jak mogę usunąć moje konto?';
-	@override String get a => 'Kliknij "${_root.profile.quickLinks.deleteAccount}" przycisk powyżej i zaloguj się jeżeli to wymagane.\nJeśli korzystasz z oficjalnego serwera Saber, Twoje konto zostanie usunięte po tygodniu. W tym czasie możesz skontaktować się ze mną pod adresem adilhanney@disroot.org, aby anulować usunięcie.\nJeśli korzystasz z serwera zewnętrznego, opcja usunięcia konta może nie być dostępna: aby uzyskać więcej informacji, musisz zapoznać się z polityką prywatności serwera.';
+	@override String get a => 'Kliknij "${_root.profile.quickLinks.deleteAccount}" przycisk powyżej i zaloguj się jeżeli to wymagane.\nJeśli korzystasz z oficjalnego serwera YC Note, Twoje konto zostanie usunięte po tygodniu. W tym czasie możesz skontaktować się ze mną pod adresem adilhanney@disroot.org, aby anulować usunięcie.\nJeśli korzystasz z serwera zewnętrznego, opcja usunięcia konta może nie być dostępna: aby uzyskać więcej informacji, musisz zapoznać się z polityką prywatności serwera.';
 }
 
 // Path: editor.toolbar
@@ -814,7 +814,7 @@ class _Translations$editor$versionTooNew$pl extends Translations$editor$versionT
 	final TranslationsPl _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Ta notatka została edytowana w nowszej wersji aplikacji Saber';
+	@override String get title => 'Ta notatka została edytowana w nowszej wersji aplikacji YC Note';
 	@override String get subtitle => 'Edycja tej notatki może spowodować utratę niektórych informacji. Czy chcesz to zignorować i mimo wszystko ją edytować?';
 	@override String get allowEditing => 'Zezwól na edycje';
 }
@@ -906,7 +906,7 @@ class _Translations$login$ncLoginStep$loginFlow$pl extends Translations$login$nc
 	final TranslationsPl _root; // ignore: unused_field
 
 	// Translations
-	@override String get pleaseAuthorize => 'Proszę autoryzuj Saber do używania twojego konta Nextcloud';
+	@override String get pleaseAuthorize => 'Proszę autoryzuj YC Note do używania twojego konta Nextcloud';
 	@override String get followPrompts => 'Proszę postępuj zgodnie z poleceniami interfejsu Nextcloud';
 	@override String get browserDidntOpen => 'Strona logowania nie otworzyła się? Kliknij tutaj';
 }
@@ -930,7 +930,7 @@ class _Translations$login$encLoginStep$encFaq$1$pl extends Translations$login$en
 
 	// Translations
 	@override String get q => 'Nie ustawiłem jeszcze hasła szyfrującego. Jak mogę je uzyskać?';
-	@override String get a => 'Utwórz nowe hasło i wpisz je poniżej. \nSaber wygeneruje klucze szyfrowania z tego hasła automatycznie.';
+	@override String get a => 'Utwórz nowe hasło i wpisz je poniżej. \nYC Note wygeneruje klucze szyfrowania z tego hasła automatycznie.';
 }
 
 // Path: login.encLoginStep.encFaq.2

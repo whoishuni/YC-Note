@@ -10,6 +10,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_quill/flutter_quill.dart' as flutter_quill;
+import 'package:go_router/go_router.dart';
 import 'package:keybinder/keybinder.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
@@ -39,6 +40,7 @@ import 'package:saber/data/extensions/matrix4_extensions.dart';
 import 'package:saber/data/file_manager/file_manager.dart';
 import 'package:saber/data/nextcloud/saber_syncer.dart';
 import 'package:saber/data/prefs.dart';
+import 'package:saber/data/routes.dart';
 import 'package:saber/data/tools/_tool.dart';
 import 'package:saber/data/tools/eraser.dart';
 import 'package:saber/data/tools/highlighter.dart';
@@ -47,6 +49,9 @@ import 'package:saber/data/tools/pen.dart';
 import 'package:saber/data/tools/pencil.dart';
 import 'package:saber/data/tools/select.dart';
 import 'package:saber/data/tools/shape_pen.dart';
+import 'package:saber/data/yc_note/account.dart';
+import 'package:saber/data/yc_note/file_coordinator.dart';
+import 'package:saber/data/yc_note/recovery.dart';
 import 'package:saber/i18n/strings.g.dart';
 import 'package:saber/pages/home/whiteboard.dart';
 import 'package:sbn/change.dart';
@@ -98,8 +103,16 @@ class Editor extends StatefulWidget {
 
 class EditorState extends State<Editor> {
   final log = Logger('EditorState');
+  late final Future<void> initialized;
+  Future<void>? _closing;
+  Future<void> get closed => _closing ?? Future.value();
+  String? _openedNamespace;
+  String? _openedRoot;
+  bool get _sameAccount =>
+      (_openedNamespace == null || _openedNamespace == ycAccount.namespace) &&
+      (_openedRoot == null || _openedRoot == FileManager.documentsDirectory);
 
-  late var coreInfo = EditorCoreInfo.placeholder;
+  late var coreInfo = EditorCoreInfo.placeholder();
 
   final _canvasGestureDetectorKey = GlobalKey<CanvasGestureDetectorState>();
   final _transformationController = TransformationController();
@@ -163,6 +176,9 @@ class EditorState extends State<Editor> {
   ValueNotifier<SavingState> savingState = ValueNotifier(SavingState.saved);
   Timer? _delayedSaveTimer;
   Timer? _watchServerTimer;
+  Future<void>? _readOnlyRecovery;
+  String? _recoveredReadOnlyPath;
+  var _recoveryFailed = false;
 
   // used to prevent accidentally drawing when pinch zooming
   var lastSeenPointerCount = 0;
@@ -182,15 +198,18 @@ class EditorState extends State<Editor> {
 
   @override
   void initState() {
+    _openedNamespace = ycAccount.hasToken ? ycAccount.namespace : null;
+    _openedRoot = FileManager.documentsDirectory;
+    ycAccount.addListener(_onAccountChanged);
     DynamicMaterialApp.addFullscreenListener(_setState);
 
-    _initAsync();
+    initialized = _initAsync();
     _assignKeybindings();
 
     super.initState();
   }
 
-  void _initAsync() async {
+  Future<void> _initAsync() async {
     final filePath = await widget.initialPath;
     filenameTextEditingController.text = p.basename(filePath);
 
@@ -202,6 +221,7 @@ class EditorState extends State<Editor> {
     }
 
     await _loadCoreInfo(filePath);
+    if (!mounted || !_sameAccount) return;
 
     if (widget.pdfPath != null) {
       await importPdfFromFilePath(widget.pdfPath!);
@@ -209,7 +229,12 @@ class EditorState extends State<Editor> {
   }
 
   Future _loadCoreInfo(String filePath) async {
-    coreInfo = await EditorCoreInfo.loadFromFilePath(filePath);
+    final loaded = await EditorCoreInfo.loadFromFilePath(filePath);
+    if (!mounted || !_sameAccount) {
+      loaded.dispose();
+      return;
+    }
+    coreInfo = loaded;
     if (coreInfo.readOnly) {
       log.info('Loaded file as read-only: ${coreInfo.readOnlyReason}');
     }
@@ -261,6 +286,71 @@ class EditorState extends State<Editor> {
   }
 
   void _setState() => setState(() {});
+
+  void _onAccountChanged() {
+    if (!_sameAccount) {
+      coreInfo.accountDetached = true;
+      unawaited(
+        _preserveReadOnlyChanges().then((_) {
+          if (mounted && !_recoveryFailed)
+            context.go(HomeRoutes.routes.first.path);
+        }),
+      );
+    } else if (ycAccount.isReadOnly && !history.isCurrentStateSaved) {
+      unawaited(_preserveReadOnlyChanges());
+    } else if (ycAccount.canWrite && _recoveredReadOnlyPath != null) {
+      _recoveredReadOnlyPath = null;
+      if (!history.isCurrentStateSaved) autosaveAfterDelay();
+    }
+    _setState();
+  }
+
+  Future<void> _preserveReadOnlyChanges() {
+    if (_readOnlyRecovery != null) return _readOnlyRecovery!;
+    if (_recoveredReadOnlyPath != null || history.isCurrentStateSaved) {
+      return Future.value();
+    }
+    _delayedSaveTimer?.cancel();
+    _renameTimer?.cancel();
+    final future = _writeReadOnlyRecovery();
+    _readOnlyRecovery = future;
+    return future.whenComplete(() => _readOnlyRecovery = null);
+  }
+
+  Future<void> _writeReadOnlyRecovery() async {
+    final root = _openedRoot ?? FileManager.documentsDirectory;
+    try {
+      savingState.value = .saving;
+      final (bson, assets) = coreInfo.saveToBinary(
+        currentPageIndex: currentPageIndex,
+      );
+      final path = await preserveYcNotebook(
+        root: root,
+        sourcePath: '${coreInfo.filePath}${Editor.extension}',
+        notebook: bson,
+        assets: [for (var i = 0; i < assets.length; i++) assets.getBytes(i)],
+      );
+      _recoveredReadOnlyPath = path;
+      _recoveryFailed = false;
+      if (FileManager.documentsDirectory == root) {
+        FileManager.broadcastFileWrite(FileOperationType.write, path);
+      }
+      // The canonical notebook is still dirty. If write access returns, resume
+      // its normal save instead of treating the recovery copy as that save.
+      if (ycAccount.isReadOnly || !_sameAccount) {
+        savingState.value = .saved;
+      } else if (mounted) {
+        _recoveredReadOnlyPath = null;
+        autosaveAfterDelay();
+      }
+    } catch (e, st) {
+      log.severe('Could not preserve pending notebook changes', e, st);
+      _recoveryFailed = true;
+      savingState.value = .waitingToSave;
+    } finally {
+      if (mounted) _setState();
+    }
+  }
 
   Keybinding? _ctrlZ, _ctrlY, _ctrlShiftZ;
   void _assignKeybindings() {
@@ -911,7 +1001,16 @@ class EditorState extends State<Editor> {
     history.markLastChangeAsSaved();
   }
 
-  Future<void> saveToFile() async {
+  Future<void> saveToFile() => YcFileCoordinator.run(() async {
+    if (!_sameAccount) {
+      await _preserveReadOnlyChanges();
+      return;
+    }
+    if (coreInfo.readOnly) {
+      if (ycAccount.isReadOnly) await _preserveReadOnlyChanges();
+      return;
+    }
+    await _readOnlyRecovery;
     if (coreInfo.readOnly) return;
 
     switch (savingState.value) {
@@ -932,6 +1031,7 @@ class EditorState extends State<Editor> {
     await _renameFileNow();
 
     final filePath = coreInfo.filePath + Editor.extension;
+    final checkpoint = history.saveCheckpoint;
     final Uint8List bson;
     final OrderedAssetCache assets;
     coreInfo.assetCache.allowRemovingAssets = false;
@@ -943,22 +1043,26 @@ class EditorState extends State<Editor> {
       coreInfo.assetCache.allowRemovingAssets = true;
     }
     try {
-      await Future.wait([
-        FileManager.writeFile(filePath, bson, awaitWrite: true),
-        for (int i = 0; i < assets.length; ++i)
-          assets
-              .getBytes(i)
-              .then(
-                (bytes) => FileManager.writeFile(
-                  '$filePath.$i',
-                  bytes,
-                  awaitWrite: true,
-                ),
-              ),
-        FileManager.removeUnusedAssets(filePath, numAssets: assets.length),
-      ]);
-      savingState.value = .saved;
-      history.markLastChangeAsSaved();
+      await FileManager.writeNotebook(
+        filePath,
+        bson,
+        List.generate(
+          assets.length,
+          (i) =>
+              (source: assets.getFile(i), readBytes: () => assets.getBytes(i)),
+        ),
+      );
+      if (ycAccount.isReadOnly || !_sameAccount) {
+        await _preserveReadOnlyChanges();
+        return;
+      }
+      history.markCheckpointAsSaved(checkpoint);
+      if (history.isCurrentStateSaved) {
+        savingState.value = .saved;
+      } else {
+        savingState.value = .waitingToSave;
+        if (mounted) autosaveAfterDelay();
+      }
     } catch (e, st) {
       log.severe('Failed to save file: $e', e, st);
       savingState.value = .waitingToSave;
@@ -986,17 +1090,19 @@ class EditorState extends State<Editor> {
       thumbnailPng!.buffer.asUint8List(),
       awaitWrite: true,
     );
-  }
+  });
 
   late final _filenameFormKey = GlobalKey<FormState>();
   late final filenameTextEditingController = TextEditingController();
   Timer? _renameTimer;
   void renameFile([String? _]) {
+    if (coreInfo.readOnly) return;
     _renameTimer?.cancel();
     _renameTimer = Timer(const Duration(seconds: 5), _renameFileNow);
   }
 
   Future<void> _renameFileNow() async {
+    if (coreInfo.readOnly) return;
     final newName = filenameTextEditingController.text.trim();
     if (newName == coreInfo.fileName) return;
 
@@ -1389,7 +1495,7 @@ class EditorState extends State<Editor> {
           page: coreInfo.pages[pageIndex],
           pageIndex: 0,
           textEditing: false,
-          coreInfo: EditorCoreInfo.placeholder,
+          coreInfo: EditorCoreInfo.placeholder(),
           currentStroke: null,
           currentStrokeDetectedShape: null,
           currentSelection: null,
@@ -1403,7 +1509,14 @@ class EditorState extends State<Editor> {
     );
 
     final readonlyBanner = ReadOnlyBanner(
-      coreInfo.readOnlyReason,
+      ycAccount.isReadOnly ? .permissionDenied : coreInfo.readOnlyReason,
+      detail: !ycAccount.isReadOnly
+          ? null
+          : _recoveryFailed
+          ? '本機副本未儲存，請重試'
+          : _recoveredReadOnlyPath != null
+          ? '變更已保留於「本機保留」'
+          : null,
       action: coreInfo.readOnlyReason == .versionTooNew
           ? showVersionTooNewDialog
           : null,
@@ -1651,6 +1764,7 @@ class EditorState extends State<Editor> {
                         key: _filenameFormKey,
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                         child: TextFormField(
+                          readOnly: coreInfo.readOnly,
                           decoration: const InputDecoration(
                             border: InputBorder.none,
                           ),
@@ -2060,7 +2174,8 @@ class EditorState extends State<Editor> {
 
   @override
   void dispose() {
-    unawaited(_cleanUpAsync());
+    ycAccount.removeListener(_onAccountChanged);
+    unawaited(_closing = _cleanUpAsync());
 
     DynamicMaterialApp.removeFullscreenListener(_setState);
 
@@ -2081,7 +2196,14 @@ class EditorState extends State<Editor> {
   }
 
   Future<void> _cleanUpAsync() async {
+    if (_readOnlyRecovery == null &&
+        history.isCurrentStateSaved &&
+        !(_renameTimer?.isActive ?? false)) {
+      coreInfo.dispose();
+      return;
+    }
     try {
+      await _readOnlyRecovery;
       if (_renameTimer?.isActive ?? false) {
         _renameTimer!.cancel();
         await _renameFileNow();

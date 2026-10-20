@@ -69,7 +69,7 @@ class _Translations$home$hu extends Translations$home$en {
 	@override late final _Translations$home$titles$hu titles = _Translations$home$titles$hu._(_root);
 	@override late final _Translations$home$tooltips$hu tooltips = _Translations$home$tooltips$hu._(_root);
 	@override late final _Translations$home$create$hu create = _Translations$home$create$hu._(_root);
-	@override String get welcome => 'Üdvözli a Saber';
+	@override String get welcome => 'Üdvözli a YC Note';
 	@override String get invalidFormat => 'A kiválasztott fájl nem támogatott. Kérjük, válasszon egy sbn, sbn2, sba vagy pdf fájlt.';
 	@override String get noFiles => 'Nem található fájl';
 	@override String get noPreviewAvailable => 'Nincs elérhető előnézet';
@@ -118,7 +118,7 @@ class _Translations$settings$hu extends Translations$settings$en {
 	];
 	@override late final _Translations$settings$reset$hu reset = _Translations$settings$reset$hu._(_root);
 	@override String get resyncEverything => 'Minden újraszinkronizálása';
-	@override String get openDataDir => 'Saber mappa megnyitása';
+	@override String get openDataDir => 'YC Note mappa megnyitása';
 	@override late final _Translations$settings$customDataDir$hu customDataDir = _Translations$settings$customDataDir$hu._(_root);
 	@override String get autosaveDisabled => 'Soha';
 	@override String get shapeRecognitionDisabled => 'Soha';
@@ -191,7 +191,7 @@ class _Translations$appInfo$hu extends Translations$appInfo$en {
 	final TranslationsHu _root; // ignore: unused_field
 
 	// Translations
-	@override String licenseNotice({required Object buildYear}) => 'Saber Copyright © 2022-${buildYear} Adil Hanney\nEz a program nem tartalmaz semmilyen garanciát. Ez egy szabad szoftver, és bizonyos feltételek mellett szabadon terjeszthető.';
+	@override String licenseNotice({required Object buildYear}) => 'YC Note Copyright © 2022-${buildYear} Adil Hanney\nEz a program nem tartalmaz semmilyen garanciát. Ez egy szabad szoftver, és bizonyos feltételek mellett szabadon terjeszthető.';
 	@override String get debug => 'DEBUG';
 	@override String get sponsorButton => 'Ide kattintva támogathat engem vagy vásárolhat több tárhelyet';
 	@override String get licenseButton => 'További licencinformációk megtekintéséhez kattintson ide';
@@ -407,7 +407,7 @@ class _Translations$sentry$consent$hu extends Translations$sentry$consent$en {
 	final TranslationsHu _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Segít a Saber fejlesztésében?';
+	@override String get title => 'Segít a YC Note fejlesztésében?';
 	@override late final _Translations$sentry$consent$description$hu description = _Translations$sentry$consent$description$hu._(_root);
 	@override late final _Translations$sentry$consent$answers$hu answers = _Translations$sentry$consent$answers$hu._(_root);
 }
@@ -439,7 +439,7 @@ class _Translations$settings$prefLabels$hu extends Translations$settings$prefLab
 	@override String get layoutSize => 'Elrendezési mód';
 	@override String get customAccentColor => 'Egyéni hangsúlyszín';
 	@override String get hyperlegibleFont => 'Atkinson Hyperlegible betűtípus';
-	@override String get shouldCheckForUpdates => 'Automatikusan ellenőrzi a Saber frissítéseket';
+	@override String get shouldCheckForUpdates => 'Automatikusan ellenőrzi a YC Note frissítéseket';
 	@override String get shouldAlwaysAlertForUpdates => 'Gyorsabb értesítések a frissítésekről';
 	@override String get allowInsecureConnections => 'Nem biztonságos kapcsolatok engedélyezése';
 	@override String get editorToolbarAlignment => 'A szerkesztő eszköztár igazítása';
@@ -458,7 +458,7 @@ class _Translations$settings$prefLabels$hu extends Translations$settings$prefLab
 	@override String get autosave => 'Automatikus mentés';
 	@override String get shapeRecognitionDelay => 'Alakfelismerés késleltetése';
 	@override String get autoStraightenLines => 'Vonalak automatikus kiegyenesítése';
-	@override String get customDataDir => 'Egyéni Saber mappa';
+	@override String get customDataDir => 'Egyéni YC Note mappa';
 	@override String get sentry => 'Hibajelentés';
 }
 
@@ -470,7 +470,7 @@ class _Translations$settings$prefDescriptions$hu extends Translations$settings$p
 
 	// Translations
 	@override String get hyperlegibleFont => 'Az Atkinson Hyperlegible növeli az olvashatóságot a gyengén látók számára';
-	@override String get allowInsecureConnections => '(Nem ajánlott) Engedélyezi, hogy a Saber ön-aláírt vagy nem megbízható tanúsítványokat használó szerverekhez csatlakozzon';
+	@override String get allowInsecureConnections => '(Nem ajánlott) Engedélyezi, hogy a YC Note ön-aláírt vagy nem megbízható tanúsítványokat használó szerverekhez csatlakozzon';
 	@override String get preferGreyscale => 'E-tinta kijelzőkhöz';
 	@override String get autoClearWhiteboardOnExit => 'A tábla törlésre kerül, amikor kilép az alkalmazásból';
 	@override String get disableEraserAfterUse => 'Automatikusan visszavált a tollra, miután a radírt használta';
@@ -581,10 +581,10 @@ class _Translations$login$ncLoginStep$hu extends Translations$login$ncLoginStep$
 
 	// Translations
 	@override String get whereToStoreData => 'Válassza ki, hol szeretné tárolni az adatait:';
-	@override String get saberNcServer => 'A Saber Nextcloud szervere';
+	@override String get saberNcServer => 'A YC Note Nextcloud szervere';
 	@override String get otherNcServer => 'Másik Nextcloud szerver';
 	@override String get serverUrl => 'Szerver URL';
-	@override String get loginWithSaber => 'Bejelentkezés Saber-rel';
+	@override String get loginWithSaber => 'Bejelentkezés YC Note-rel';
 	@override String get loginWithNextcloud => 'Bejelentkezés Nextcloud-dal';
 	@override late final _Translations$login$ncLoginStep$loginFlow$hu loginFlow = _Translations$login$ncLoginStep$loginFlow$hu._(_root);
 }
@@ -597,7 +597,7 @@ class _Translations$login$encLoginStep$hu extends Translations$login$encLoginSte
 
 	// Translations
 	@override String get enterEncPassword => 'Az adatai védelme érdekében kérjük, adja meg a titkosítási jelszavát:';
-	@override String get newToSaber => 'Először használja a Saber-t? Adjon meg egy új titkosítási jelszót.';
+	@override String get newToSaber => 'Először használja a YC Note-t? Adjon meg egy új titkosítási jelszót.';
 	@override String get encPassword => 'Titkosítási jelszó';
 	@override String get encFaqTitle => 'Gyakran ismételt kérdések';
 	@override String get wrongEncPassword => 'A megadott jelszóval a visszafejtés nem sikerült. Kérjük, próbálja meg újra megadni.';
@@ -639,7 +639,7 @@ class _Translations$profile$faq$1$hu extends Translations$profile$faq$1$en {
 
 	// Translations
 	@override String get q => 'Hogyan változtatom meg a Nextcloud jelszavamat?';
-	@override String get a => 'Nyissa meg a szerver weboldalát, és jelentkezzen be. Ezután menjen a Beállítások > Biztonság > Jelszó módosítása menüpontra. A jelszó módosítása után ki kell jelentkeznie a Saberből, majd újra be kell jelentkeznie.';
+	@override String get a => 'Nyissa meg a szerver weboldalát, és jelentkezzen be. Ezután menjen a Beállítások > Biztonság > Jelszó módosítása menüpontra. A jelszó módosítása után ki kell jelentkeznie a YC Noteből, majd újra be kell jelentkeznie.';
 }
 
 // Path: profile.faq.2
@@ -650,7 +650,7 @@ class _Translations$profile$faq$2$hu extends Translations$profile$faq$2$en {
 
 	// Translations
 	@override String get q => 'Hogyan változtatom meg a titkosítási jelszavamat?';
-	@override String get a => '0. Győződjön meg arról, hogy a szinkronizálás befejeződött (a szinkronizálás állapotát a kezdőképernyőn láthatja).\n1. Jelentkezzen ki a Saberből.\n2. Nyissa meg a szerver weboldalát, és törölje a „Saber” mappát. Ez minden jegyzetét törli a szerverről.\n3. Jelentkezzen be újra a Saberbe. Bejelentkezéskor új titkosítási jelszót választhat.\n4. Ne felejtkezzen el kijelentkezni, majd újra bejelentkezni a Saberbe a többi eszközén is.';
+	@override String get a => '0. Győződjön meg arról, hogy a szinkronizálás befejeződött (a szinkronizálás állapotát a kezdőképernyőn láthatja).\n1. Jelentkezzen ki a YC Noteből.\n2. Nyissa meg a szerver weboldalát, és törölje a „YC Note” mappát. Ez minden jegyzetét törli a szerverről.\n3. Jelentkezzen be újra a YC Notebe. Bejelentkezéskor új titkosítási jelszót választhat.\n4. Ne felejtkezzen el kijelentkezni, majd újra bejelentkezni a YC Notebe a többi eszközén is.';
 }
 
 // Path: profile.faq.3
@@ -661,7 +661,7 @@ class _Translations$profile$faq$3$hu extends Translations$profile$faq$3$en {
 
 	// Translations
 	@override String get q => 'Hogyan törölhetem a fiókomat?';
-	@override String get a => 'Koppintson a fenti „${_root.profile.quickLinks.deleteAccount}” gombra, és szükség esetén jelentkezzen be.\nHa a hivatalos Saber szervert használja, a fiókja 1 hetes türelmi idő után törlésre kerül. Ebben az időszakban a törlés visszavonásához vegye fel a kapcsolatot a következő e-mail címen: adilhanney@disroot.org.\nHa harmadik féltől származó szervert használ, előfordulhat, hogy nincs lehetőség a fiók törlésére: további információért tekintse meg a szerver adatvédelmi szabályzatát.';
+	@override String get a => 'Koppintson a fenti „${_root.profile.quickLinks.deleteAccount}” gombra, és szükség esetén jelentkezzen be.\nHa a hivatalos YC Note szervert használja, a fiókja 1 hetes türelmi idő után törlésre kerül. Ebben az időszakban a törlés visszavonásához vegye fel a kapcsolatot a következő e-mail címen: adilhanney@disroot.org.\nHa harmadik féltől származó szervert használ, előfordulhat, hogy nincs lehetőség a fiók törlésére: további információért tekintse meg a szerver adatvédelmi szabályzatát.';
 }
 
 // Path: editor.toolbar
@@ -814,7 +814,7 @@ class _Translations$editor$versionTooNew$hu extends Translations$editor$versionT
 	final TranslationsHu _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Ez a jegyzet a Saber egy újabb verziójával lett szerkesztve';
+	@override String get title => 'Ez a jegyzet a YC Note egy újabb verziójával lett szerkesztve';
 	@override String get subtitle => 'A jegyzet szerkesztése bizonyos információk elvesztését eredményezheti. Szeretné ezt figyelmen kívül hagyni, és mégis szerkeszteni?';
 	@override String get allowEditing => 'Szerkesztés engedélyezése';
 }
@@ -906,7 +906,7 @@ class _Translations$login$ncLoginStep$loginFlow$hu extends Translations$login$nc
 	final TranslationsHu _root; // ignore: unused_field
 
 	// Translations
-	@override String get pleaseAuthorize => 'Kérjük, engedélyezze a Saber számára a Nextcloud-fiókjához való hozzáférést';
+	@override String get pleaseAuthorize => 'Kérjük, engedélyezze a YC Note számára a Nextcloud-fiókjához való hozzáférést';
 	@override String get followPrompts => 'Kérjük, kövesse a Nextcloud felületén megjelenő utasításokat';
 	@override String get browserDidntOpen => 'Nem nyílt meg a bejelentkezési oldal? Kattintson ide';
 }
@@ -930,7 +930,7 @@ class _Translations$login$encLoginStep$encFaq$1$hu extends Translations$login$en
 
 	// Translations
 	@override String get q => 'Még nem állítottam be titkosítási jelszót. Hol szerezhetem meg?';
-	@override String get a => 'Válasszon egy új titkosítási jelszót, és adja meg fent.\nA Saber automatikusan létrehozza a titkosítási kulcsokat ebből a jelszóból.';
+	@override String get a => 'Válasszon egy új titkosítási jelszót, és adja meg fent.\nA YC Note automatikusan létrehozza a titkosítási kulcsokat ebből a jelszóból.';
 }
 
 // Path: login.encLoginStep.encFaq.2

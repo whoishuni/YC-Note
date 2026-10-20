@@ -20,7 +20,7 @@ home:
   create:
     newNote: Nieuwe notitie
     importNote: Importeer notitie
-  welcome: Welkom bij Saber
+  welcome: Welkom bij YC Note
   invalidFormat: Deze software werkt niet met het geselecteerde bestand. Selecteer een sbn, sbn2, sba of pdf bestand.
   noFiles: Geen bestand gevonden
   noPreviewAvailable: Geen voorbeeld beschikbaar
@@ -81,7 +81,7 @@ home:
     simpleGrid(OUTDATED): Eenvoudig raster
 sentry:
   consent:
-    title: Help Saber verbeteren?
+    title: Help YC Note verbeteren?
     description:
       question: Automatisch fouten rapporteren? Dit helpt sneller fouten vinden.
       scope: Het rapport kan informatie over uw apparaat bevatten.
@@ -125,11 +125,11 @@ settings:
     autosave: Automatisch opslaan
     shapeRecognitionDelay: Vorm herkenning vertraging
     autoStraightenLines: Automatisch lijnen recht maken
-    customDataDir: Aangepaste Saber map
+    customDataDir: Aangepaste YC Note map
     sentry: Fouten rapportering
   prefDescriptions:
     hyperlegibleFont: Verbetert leesbaarheid voor gebruikers met weinig zicht
-    allowInsecureConnections: (Niet aangeraden) Laat Saber met zelf getekende servers verbinden
+    allowInsecureConnections: (Niet aangeraden) Laat YC Note met zelf getekende servers verbinden
     preferGreyscale: Voor e-ink schermen
     autoClearWhiteboardOnExit: Maakt het whiteboard leeg nadat de app is verlaten
     disableEraserAfterUse: Automatisch terug gaan naar schrijven na gum gebruik
@@ -170,7 +170,7 @@ settings:
     title: Instelling terug zetten?
     button: Terugzetten
   resyncEverything: Alles hersynchroniseren
-  openDataDir: Saber map openen
+  openDataDir: YC Note map openen
   customDataDir:
     cancel: Stop
     select: Selecteer
@@ -199,18 +199,18 @@ login:
     loggedIn: Ingelogd met Nextcloud
   ncLoginStep:
     whereToStoreData: "Kies welke opslag te gebruiken:"
-    saberNcServer: Saber's Nextcloud server
+    saberNcServer: YC Note's Nextcloud server
     otherNcServer: Andere Nextcloud server
     serverUrl: Server URL
-    loginWithSaber: Inloggen met Saber
+    loginWithSaber: Inloggen met YC Note
     loginWithNextcloud: Inloggen met Nextcloud
     loginFlow:
-      pleaseAuthorize: Autoriseer Saber bij je Nextcloud account
+      pleaseAuthorize: Autoriseer YC Note bij je Nextcloud account
       followPrompts: Volg de instructies op de Nextcloud pagina
       browserDidntOpen: Is de login pagina niet geopend? Klik hier
   encLoginStep:
     enterEncPassword: "Om uw gegevens te beschermen, geef hier uw versleutelingswachtwoord op:"
-    newToSaber: Nieuw bij Saber? Bedenk gewoon een nieuw wachtwoord.
+    newToSaber: Nieuw bij YC Note? Bedenk gewoon een nieuw wachtwoord.
     encPassword: Versleutelingswachtwoord
     encFaqTitle: Vaak gevraagd
     wrongEncPassword: Ontsleuteling gefaald met gegeven wachtwoord, probeer opnieuw.
@@ -224,7 +224,7 @@ login:
     - q: Ik heb nog geen versleutelingswachtwoord gebruikt, waar krijg ik deze?
       a: |-
         Kies een nieuw versleutelingswachtwoord en voer hem hierboven in.
-        Saber zal automatisch versleutelingssleutels maken van dit wachtwoord.
+        YC Note zal automatisch versleutelingssleutels maken van dit wachtwoord.
     - q: Kan ik hetzelfde wachtwoord als my Nextcloud wachtwoord gebruiken?
       a: Ja, maar houd er rekening mee dat het makkelijker is voor de serverbeheerder of iemand anders om toegang te krijgen tot je notities als ze toegang krijgen tot je Nextcloud-account.
 profile:
@@ -240,18 +240,18 @@ profile:
   - q: Ben ik mijn notities kwijt als ik uitlog?
     a: Nee. Je notities blijven zowel op je apparaat als op de server staan. Ze worden pas gesynchroniseerd met de server als je weer inlogt. Zorg dat de synchronisatie voltooid is voordat je uitlogt, zodat je geen data verliest (zie de synchronisatievoortgang op het startscherm).
   - q: Hoe verander ik mijn Nextcloud wachtwoord?
-    a: Ga naar de website van je server en log in. Ga dan naar Instellingen > Beveiliging > Wachtwoord wijzigen. Je moet uitloggen en weer inloggen op Saber nadat je je wachtwoord hebt veranderd.
+    a: Ga naar de website van je server en log in. Ga dan naar Instellingen > Beveiliging > Wachtwoord wijzigen. Je moet uitloggen en weer inloggen op YC Note nadat je je wachtwoord hebt veranderd.
   - q: Hoe verander ik mijn versleutelingswachtwoord?
     a: |-
       0. Zorg dat de synchronisatie voltooid is (zie de voortgang van synchronisatie op het startscherm).
-      1. Log uit bij Saber.
-      2. Ga naar de website van je server en verwijder je 'Saber'-map. Dit verwijdert al je notities van de server.
-      3. Log weer in op Saber. Je kunt een nieuw encryptiewachtwoord kiezen bij het inloggen.
-      4. Vergeet niet uit te loggen en weer in te loggen op Saber op je andere apparaten.
+      1. Log uit bij YC Note.
+      2. Ga naar de website van je server en verwijder je 'YC Note'-map. Dit verwijdert al je notities van de server.
+      3. Log weer in op YC Note. Je kunt een nieuw encryptiewachtwoord kiezen bij het inloggen.
+      4. Vergeet niet uit te loggen en weer in te loggen op YC Note op je andere apparaten.
   - q: Hoe kan ik mijn account verwijderen?
     a: |-
       Tik op de knop "@:profile.quickLinks.deleteAccount" hierboven en log in indien nodig.
-      Als je de officiële Saber-server gebruikt, wordt je account na een periode van 1 week verwijderd. Je kunt me in deze periode op adilhanney@disroot.org contacteren om de verwijdering te annuleren.
+      Als je de officiële YC Note-server gebruikt, wordt je account na een periode van 1 week verwijderd. Je kunt me in deze periode op adilhanney@disroot.org contacteren om de verwijdering te annuleren.
       Als je een server van derden gebruikt, is er mogelijk geen optie om je account te verwijderen: je moet het privacybeleid van de server raadplegen voor meer informatie.
   quotaUsageUncapped(OUTDATED): Je gebruikt $used
 appInfo:
@@ -360,7 +360,7 @@ editor:
     watchingServer: Je bent momenteel aan het synchroniseren met updates van de server. Bewerken is uitgeschakeld in deze modus.
     corrupted: Notitie is niet geladen. Het kan corrupt zijn of nog steeds aan het downloaden zijn.
   versionTooNew:
-    title: Deze notitie is gemaakt met een nieuwere versie van Saber
+    title: Deze notitie is gemaakt met een nieuwere versie van YC Note
     subtitle: Het bewerken van deze notitie kan ertoe leiden dat sommige informatie verloren gaat. Wil je dit negeren en toch bewerken?
     allowEditing: Veranderen toestaan
   quill:
